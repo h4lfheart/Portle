@@ -15,6 +15,7 @@ public partial class AppWindowModel : ViewModelBase
 { 
     public Frame ContentFrame;
     public NavigationView NavigationView;
+    public Action HideCommand;
 
     [ObservableProperty] private bool _finishedSetup;
     

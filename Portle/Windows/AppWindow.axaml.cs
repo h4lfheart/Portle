@@ -16,6 +16,7 @@ public partial class AppWindow : WindowBase<AppWindowModel>
         DataContext = WindowModel;
         WindowModel.ContentFrame = ContentFrame;
         WindowModel.NavigationView = NavigationView;
+        WindowModel.HideCommand = Hide;
     }
 
     private void OnItemInvoked(object? sender, NavigationViewItemInvokedEventArgs e)

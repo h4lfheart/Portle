@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -30,16 +31,7 @@ public static class MiscExtensions
     {
         return filters.Any(x => input.Contains(x, StringComparison.OrdinalIgnoreCase));
     }
-
-    public static void InsertMany<T>(this List<T> list, int index, T item, int count)
-    {
-        var repeat = FastRepeat<T>.Instance;
-        repeat.Count = count;
-        repeat.Item = item;
-        list.InsertRange(index, FastRepeat<T>.Instance);
-        repeat.Item = default;
-    }
-
+    
     public static bool AddUnique<T>(this List<T> list, T item)
     {
         if (list.Contains(item)) return false;
@@ -225,49 +217,18 @@ public static class MiscExtensions
             Copy(subDirectory, target.CreateSubdirectory(subDirectory.Name));
         }
     }
-}
-
-file class FastRepeat<T> : ICollection<T>
-{
-    public static readonly FastRepeat<T> Instance = new();
-    public int Count { get; set; }
-    public bool IsReadOnly => true;
-    [AllowNull] public T Item { get; set; }
-
-    public void Add(T item)
+    
+    public static bool IsProcessRunning(string processPath)
     {
-        throw new NotImplementedException();
+        var processName = Path.GetFileNameWithoutExtension(processPath);
+        var processes = Process.GetProcessesByName(processName);
+        return processes.Any(process => process.MainModule?.FileName.StartsWith(processPath, StringComparison.OrdinalIgnoreCase) ?? false);
     }
-
-    public void Clear()
+    
+    public static Process? GetRunningProcess(string processPath)
     {
-        throw new NotImplementedException();
-    }
-
-    public bool Contains(T item)
-    {
-        throw new NotImplementedException();
-    }
-
-    public bool Remove(T item)
-    {
-        throw new NotImplementedException();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerator<T> GetEnumerator()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void CopyTo(T[] array, int arrayIndex)
-    {
-        var end = arrayIndex + Count;
-
-        for (var i = arrayIndex; i < end; ++i) array[i] = Item;
+        var processName = Path.GetFileNameWithoutExtension(processPath);
+        var processes = Process.GetProcessesByName(processName);
+        return processes.FirstOrDefault(process => process.MainModule?.FileName.StartsWith(processPath, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 }

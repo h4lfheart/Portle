@@ -35,8 +35,8 @@ public static class ApplicationService
     public static IStorageProvider StorageProvider => Application.MainWindow!.StorageProvider;
     public static IClipboard Clipboard => Application.MainWindow!.Clipboard!;
     
-    public static readonly DirectoryInfo LogsFolder = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs"));
     public static readonly DirectoryInfo LauncherDataFolder = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Portle"));
+    public static readonly DirectoryInfo LogsFolder = new(Path.Combine(LauncherDataFolder.FullName, "Logs"));
     public static string LogFilePath;
     
     public static void Initialize()
@@ -154,8 +154,6 @@ public static class ApplicationService
         {
             var repositoryUrl = args[addRepoIndex + 1].Trim('"');
             await RepositoriesVM.AddRepository(repositoryUrl);
-            
-            Log.Information("Added repository {repositoryUrl}", repositoryUrl);
         }
 
         if (args.IndexOf("--import-profile") is var importProfileCommandIndex and not -1)
@@ -164,9 +162,14 @@ public static class ApplicationService
             var executablePath = args[importProfileCommandIndex + 2].Trim('"');
             var repositoryId = args[importProfileCommandIndex + 3].Trim('"');
 
-            var profileExists = ProfilesVM.ProfilesSource.Items.Any(profile => profile.Name.Equals(profileName));
+            var existingProfile = ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName));
             var targetRepository = RepositoriesVM.Repositories.FirstOrDefault(repo => repo.Id.Equals(repositoryId));
-            if (!profileExists && targetRepository is not null)
+            if (existingProfile is not null)
+            {
+                existingProfile.Directory = Path.GetDirectoryName(executablePath)!;
+                existingProfile.ExecutableName = Path.GetFileName(executablePath);
+            }
+            else if (existingProfile is null && targetRepository is not null)
             {
                 var targetDownloadVersion = targetRepository.Versions.MaxBy(version => version.UploadTime)!;
                 var targetVersion = await targetDownloadVersion.DownloadInstallationVersion();
@@ -190,7 +193,22 @@ public static class ApplicationService
 
                 ProfilesVM.ProfilesSource.Add(profile);
                 
-                Log.Information("Created Profile {profileName}", profileName);
+                Log.Information($"Added new profile named \"{profileName}\" at {profile.ExecutablePath}");
+            }
+        }
+        
+        if (args.IndexOf("--update-profile") is var updateProfileIndex and not -1)
+        {
+            var profileName = args[updateProfileIndex + 1].Trim('"');
+            var isForcedIndex = updateProfileIndex + 2;
+            var isForced = isForcedIndex < args.Length && args[isForcedIndex].Trim('"').Equals("-force");
+            if (ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName)) is
+                { } existingProfile)
+            {
+                if (isForced)
+                    await existingProfile.UpdateForce();
+                else
+                    await existingProfile.Update(verbose: false);
             }
         }
         
@@ -200,19 +218,8 @@ public static class ApplicationService
             if (ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName)) is
                 { } existingProfile)
             {
+                Log.Information($"FILE EXISTS MAYBE??? {File.Exists(existingProfile.ExecutablePath)}");
                 await existingProfile.Launch();
-                Log.Information("Launched Profile {profileName}", profileName);
-            }
-        }
-        
-        if (args.IndexOf("--update-profile") is var updateProfileIndex and not -1)
-        {
-            var profileName = args[updateProfileIndex + 1].Trim('"');
-            if (ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName)) is
-                { } existingProfile)
-            {
-                await existingProfile.Update(verbose: false);
-                Log.Information("Updated Profile {profileName}", profileName);
             }
         }
     }

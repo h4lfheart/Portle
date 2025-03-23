@@ -17,6 +17,7 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private string _downloadsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Portle", "Downloads");
     [ObservableProperty] private bool _launchOnStartup = false;
     [ObservableProperty] private bool _minimizeToTray = false;
+    [ObservableProperty] private bool _closeOnLaunch = false;
     
     [ObservableProperty] private ObservableCollection<RepositoryUrlContainer> _repositories = [];
     [ObservableProperty] private ObservableCollection<InstallationVersion> _downloadedVersions = [];

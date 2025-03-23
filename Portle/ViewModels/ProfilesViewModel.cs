@@ -44,6 +44,14 @@ public partial class ProfilesViewModel : ViewModelBase
             .Subscribe();
         
         Profiles = collection;
+
+        foreach (var profile in AppSettings.Current.Profiles.ToArray())
+        {
+            if (!File.Exists(profile.ExecutablePath))
+            {
+                AppSettings.Current.Profiles.Remove(profile);
+            } 
+        }
         
         ProfilesSource.AddRange(AppSettings.Current.Profiles);
     }

@@ -10,6 +10,7 @@ using Portle.Extensions;
 using Portle.Framework;
 using Portle.Models.Downloads;
 using Portle.Models.Repository;
+using Serilog;
 
 namespace Portle.ViewModels;
 
@@ -70,7 +71,8 @@ public partial class RepositoriesViewModel : ViewModelBase
                 AppWM.Message("Repositories", $"A repository already exists with the url \"{url}\"");
             return;
         }
-                
+        
+        Log.Information($"Added new repository at {url}");
         AppSettings.Current.Repositories.Add(new RepositoryUrlContainer(url));
         await Refresh();
         await DownloadsVM.Refresh();

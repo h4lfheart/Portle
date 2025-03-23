@@ -83,6 +83,12 @@
                         <ToggleSwitch IsChecked="{Binding MinimizeToTray, Mode=TwoWay}"/>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
+                
+                <ui:SettingsExpander Header="Hide on Launch" Description="Whether or not to minimize the application to the system tray after launching a profile">
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding CloseOnLaunch, Mode=TwoWay}"/>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
             </StackPanel>
         </ScrollViewer>
         

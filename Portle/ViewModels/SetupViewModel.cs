@@ -24,6 +24,7 @@ public partial class SetupViewModel : ViewModelBase
     
     [ObservableProperty] private bool _launchOnStartup = false;
     [ObservableProperty] private bool _minimizeToTray = false;
+    [ObservableProperty] private bool _closeOnLaunch = false;
 
     [RelayCommand]
     public async Task Continue()
@@ -33,6 +34,7 @@ public partial class SetupViewModel : ViewModelBase
         AppSettings.Current.Repositories = [new RepositoryUrlContainer(Globals.DEFAULT_REPOSITORY)];
         AppSettings.Current.LaunchOnStartup = LaunchOnStartup;
         AppSettings.Current.MinimizeToTray = MinimizeToTray;
+        AppSettings.Current.CloseOnLaunch = CloseOnLaunch;
         AppSettings.Current.FinishedSetup = true;
         
         ViewModelRegistry.New<RepositoriesViewModel>(initialize: true);

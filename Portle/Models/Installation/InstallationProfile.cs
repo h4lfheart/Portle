@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Newtonsoft.Json;
 using Portle.Application;
+using Portle.Extensions;
 using Serilog;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
 
@@ -35,13 +36,45 @@ public partial class InstallationProfile : ObservableObject
 
     public async Task Launch()
     {
+        if (!File.Exists(ExecutablePath))
+        {
+            var dialog = new ContentDialog
+            {
+                Title = $"Missing Executable for \"{Name}\"",
+                Content = "The executable that this profile is linked to no longer exists. Please decide whether to delete the profile, link a new executable, or cancel.",
+                CloseButtonText = "Cancel",
+                PrimaryButtonText = "Link",
+                PrimaryButtonCommand = new RelayCommand(async () =>
+                {
+                    if (await BrowseFileDialog() is { } newPath)
+                    {
+                        ExecutableName = Path.GetFileName(newPath);
+                        Directory = Path.GetDirectoryName(newPath)!;
+                    }
+                }),
+                SecondaryButtonText = "Delete",
+                SecondaryButtonCommand = new RelayCommand(async () =>
+                {
+                    await ProfilesVM.Delete(this);
+                })
+            };
+
+            await dialog.ShowAsync();
+            
+            return;
+        }
+        
         AppWM.Message("Launch", $"Launching {Name}");
+        Log.Information($"Launched profile \"{Name}\" at {ExecutablePath}");
         
         Process.Start(new ProcessStartInfo
         {
             FileName = ExecutablePath,
             UseShellExecute = true
         });
+        
+        if (AppSettings.Current.CloseOnLaunch)
+            AppWM.HideCommand.Invoke();
     }
     
     public async Task Rename()
@@ -117,6 +150,8 @@ public partial class InstallationProfile : ObservableObject
         {
             if (verbose)
                 AppWM.Message("Update", $"{Name} is up to date");
+            
+            Log.Information($"Profile \"{Name}\" is up to date");
             return;
         }
 
@@ -128,9 +163,29 @@ public partial class InstallationProfile : ObservableObject
         
         Log.Information($"{Name} was updated from \"{oldVersion}\" to \"{Version}\"");
     }
+    
+    public async Task UpdateForce()
+    {
+        if (ProfileType != EProfileType.Repository) return;
+        
+        var targetRepository = RepositoriesVM.Repositories.FirstOrDefault(repo => repo.RepositoryUrl.Equals(RepositoryUrl));
+            
+        var newestVersion = targetRepository?.Versions.MaxBy(version => version.Version);
+        if (newestVersion is null) return;
+
+        ChangeVersion(await newestVersion.DownloadInstallationVersion(), verbose: false);
+        
+        Log.Information($"Force updated \"{Name}\" to {newestVersion.Version}");
+    }
 
     public void ChangeVersion(InstallationVersion newVersion, bool verbose = true)
     {
+        if (MiscExtensions.GetRunningProcess(ExecutablePath) is { } runningProcess)
+        {
+            runningProcess.Kill(entireProcessTree: true);
+            Log.Information($"Killed {ExecutablePath}");
+        }
+        
         File.Delete(ExecutablePath);
         File.Copy(newVersion.ExecutablePath, ExecutablePath);
         ExecutableName = Path.GetFileName((string?)newVersion.ExecutablePath);
