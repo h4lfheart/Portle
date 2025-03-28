@@ -10,6 +10,7 @@ using Avalonia.Layout;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 using Portle.Application;
 using Portle.Extensions;
@@ -29,6 +30,8 @@ public partial class InstallationProfile : ObservableObject
     
     [ObservableProperty] private string? _iconUrl;
     [ObservableProperty] private string? _repositoryUrl;
+
+    public bool IsImported => !Directory.Contains(AppSettings.Current.InstallationPath);
 
     [JsonIgnore] public string ExecutablePath => Path.Combine(Directory, ExecutableName);
     [JsonIgnore] public string DescriptionString => $"{Version} - {Id}";
@@ -198,7 +201,10 @@ public partial class InstallationProfile : ObservableObject
 
     public async Task DeleteAndCleanup()
     {
-        System.IO.Directory.Delete(Directory, true);
+        if (!System.IO.Directory.Exists(Directory)) return;
+        if (IsImported) return;
+
+        FileSystem.DeleteDirectory(Directory, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
     }
     
 }
