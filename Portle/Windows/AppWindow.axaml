@@ -13,7 +13,7 @@
         WindowStartupLocation="CenterScreen" ClosingBehavior="OwnerAndChildWindows" Closing="OnClosing"
         Icon="/Assets/PortleLogo.ico"
         Title="Portle">
-    <Grid RowDefinitions="30, *" Margin="{Binding $parent[Window].OffScreenMargin}">
+    <Grid RowDefinitions="35, *" Margin="{Binding $parent[Window].OffScreenMargin}">
         <ExperimentalAcrylicBorder Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial BackgroundSource="Digger" MaterialOpacity="1.5" TintColor="#34384f" TintOpacity="1"/>
@@ -89,18 +89,21 @@
              </Grid>
          </ui:NavigationView>
         
-        <Grid Grid.Row="0" Background="Transparent" HorizontalAlignment="Stretch" PointerPressed="OnPointerPressedUpperBar">
+        <Grid Grid.Row="0" Background="Transparent" HorizontalAlignment="Center" PointerPressed="OnPointerPressedUpperBar">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="{ext:Space 1}" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="{ext:Space 0.25}" />
+                <ColumnDefinition Width="{ext:Space 0.75}" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
+            
+            <ui:ImageIcon Grid.Column="0" Source="/Assets/PortleLogo.png" 
+                          HorizontalAlignment="Center"
+                          Width="20" Height="20" 
+                          RenderOptions.BitmapInterpolationMode="HighQuality"/>
 
-            <TextBlock Grid.Column="1" Text="Portle" FontWeight="SemiBold" FontSize="16"
-                       HorizontalAlignment="Left" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="3" Text="Version Manager" Classes="TextFillColorTertiaryBrush" FontSize="13" Margin="0 0 0 0"
-                       HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="2" Text="Portle" FontWeight="SemiBold" FontSize="16"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
         </Grid>
+        
     </Grid>
 </Window>

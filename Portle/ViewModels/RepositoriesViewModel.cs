@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -65,7 +66,7 @@ public partial class RepositoriesViewModel : ViewModelBase
 
     public async Task AddRepository(string url, bool verbose = false)
     {
-        if (AppSettings.Current.Repositories.Any(repo => repo.RepositoryUrl.Equals(url)))
+        if (AppSettings.Current.Repositories.Any(repo => repo.RepositoryUrl.Equals(url, StringComparison.OrdinalIgnoreCase)))
         {
             if (verbose)
                 AppWM.Message("Repositories", $"A repository already exists with the url \"{url}\"");
