@@ -34,7 +34,7 @@ public partial class InstallationProfile : ObservableObject
     public bool IsImported => !Directory.Contains(AppSettings.Current.InstallationPath);
 
     [JsonIgnore] public string ExecutablePath => Path.Combine(Directory, ExecutableName);
-    [JsonIgnore] public string DescriptionString => $"{Version} - {Id}";
+    [JsonIgnore] public string DescriptionString => $"{Version} - {(IsImported ? "Imported" : "Managed")} - {Id}}}";
     [JsonIgnore] public Task<Bitmap?> IconImage => ImageLoader.AsyncImageLoader.ProvideImageAsync(IconUrl ?? string.Empty);
 
     public async Task Launch()
@@ -202,8 +202,9 @@ public partial class InstallationProfile : ObservableObject
     public async Task DeleteAndCleanup()
     {
         if (!System.IO.Directory.Exists(Directory)) return;
+        if (!Directory.Contains(Id.ToString())) return; // double check this is managed by portle
         if (IsImported) return;
-
+        
         FileSystem.DeleteDirectory(Directory, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
     }
     

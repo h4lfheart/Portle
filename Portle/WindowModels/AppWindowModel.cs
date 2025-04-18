@@ -17,6 +17,8 @@ public partial class AppWindowModel : ViewModelBase
     public NavigationView NavigationView;
     public Action HideCommand;
 
+    [ObservableProperty] private string _versionString = Globals.VersionString;
+
     [ObservableProperty] private bool _finishedSetup;
     
     [ObservableProperty] private ObservableCollection<InfoBarData> _infoBars = [];

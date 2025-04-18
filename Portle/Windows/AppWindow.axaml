@@ -89,20 +89,25 @@
              </Grid>
          </ui:NavigationView>
         
-        <Grid Grid.Row="0" Background="Transparent" HorizontalAlignment="Center" PointerPressed="OnPointerPressedUpperBar">
+        <Grid Grid.Row="0" Background="Transparent" HorizontalAlignment="Stretch" PointerPressed="OnPointerPressedUpperBar">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="{ext:Space 0.75}" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="{ext:Space 0.5}" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             
             <ui:ImageIcon Grid.Column="0" Source="/Assets/PortleLogo.png" 
-                          HorizontalAlignment="Center"
+                          HorizontalAlignment="Right"
                           Width="20" Height="20" 
                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
 
             <TextBlock Grid.Column="2" Text="Portle" FontWeight="SemiBold" FontSize="16"
                        HorizontalAlignment="Center" VerticalAlignment="Center" />
+            
+            <TextBlock Grid.Column="4" Text="{Binding VersionString}" Classes="TextFillColorTertiaryBrush" FontSize="13" Margin="0 0 0 0"
+                       HorizontalAlignment="Left" VerticalAlignment="Center" />
         </Grid>
         
     </Grid>
