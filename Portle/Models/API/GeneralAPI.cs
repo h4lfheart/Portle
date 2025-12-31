@@ -4,15 +4,15 @@ using RepositoryResponse = Portle.Models.API.Response.RepositoryResponse;
 
 namespace Portle.Models.API;
 
-public class MiscAPI(RestClient client) : APIBase(client)
+public class GeneralAPI(RestClient client) : APIBase(client)
 {
-    public async Task<RepositoryResponse?> GetRepositoryAsync(string url)
+    public async Task<RepositoryResponse?> Repository(string url)
     {
         return await ExecuteAsync<RepositoryResponse>(url);
     }
 
     public RepositoryResponse? GetRepository(string url)
     {
-        return GetRepositoryAsync(url).GetAwaiter().GetResult();
+        return Repository(url).GetAwaiter().GetResult();
     }
 }

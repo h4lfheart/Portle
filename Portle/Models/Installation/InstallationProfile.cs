@@ -14,6 +14,8 @@ using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
 using Portle.Application;
 using Portle.Extensions;
+using Portle.Models.Information;
+using Portle.Services;
 using Serilog;
 using Bitmap = Avalonia.Media.Imaging.Bitmap;
 
@@ -31,43 +33,41 @@ public partial class InstallationProfile : ObservableObject
     [ObservableProperty] private string? _iconUrl;
     [ObservableProperty] private string? _repositoryUrl;
 
-    public bool IsImported => !Directory.Contains(AppSettings.Current.InstallationPath);
+    public bool IsImported => !Directory.Contains(AppSettings.Application.InstallationPath);
 
     [JsonIgnore] public string ExecutablePath => Path.Combine(Directory, ExecutableName);
-    [JsonIgnore] public string DescriptionString => $"{Version} - {(IsImported ? "Imported" : "Managed")} - {Id}}}";
-    [JsonIgnore] public Task<Bitmap?> IconImage => ImageLoader.AsyncImageLoader.ProvideImageAsync(IconUrl ?? string.Empty);
+    [JsonIgnore] public string DescriptionString => $"{Version} - {(IsImported ? "External" : "Portle")} - {Id}}}";
 
     public async Task Launch()
     {
         if (!File.Exists(ExecutablePath))
         {
-            var dialog = new ContentDialog
-            {
-                Title = $"Missing Executable for \"{Name}\"",
-                Content = "The executable that this profile is linked to no longer exists. Please decide whether to delete the profile, link a new executable, or cancel.",
-                CloseButtonText = "Cancel",
-                PrimaryButtonText = "Link",
-                PrimaryButtonCommand = new RelayCommand(async () =>
+            Info.Dialog($"Missing Executable for \"{Name}\"", "The executable that this profile is linked to no longer exists. Please decide whether to delete the profile, link a new executable, or cancel.", buttons: [
+                new DialogButton
                 {
-                    if (await BrowseFileDialog() is { } newPath)
+                    Text = "Link",
+                    Action = () => TaskService.Run(async () =>
                     {
+                        if (await AppServices.App.BrowseFileDialog() is not { } newPath) return;
+                    
                         ExecutableName = Path.GetFileName(newPath);
                         Directory = Path.GetDirectoryName(newPath)!;
-                    }
-                }),
-                SecondaryButtonText = "Delete",
-                SecondaryButtonCommand = new RelayCommand(async () =>
+                    })
+                },
+                new DialogButton
                 {
-                    await ProfilesVM.Delete(this);
-                })
-            };
-
-            await dialog.ShowAsync();
+                    Text = "Delete",
+                    Action = () => TaskService.Run(async () =>
+                    {
+                        await ProfilesVM.Delete(this);
+                    })
+                }
+            ]);
             
             return;
         }
         
-        AppWM.Message("Launch", $"Launching {Name}");
+        Info.Message(Name, $"Launching Profile");
         Log.Information($"Launched profile \"{Name}\" at {ExecutablePath}");
         
         Process.Start(new ProcessStartInfo
@@ -76,7 +76,7 @@ public partial class InstallationProfile : ObservableObject
             UseShellExecute = true
         });
         
-        if (AppSettings.Current.CloseOnLaunch)
+        if (AppSettings.Application.CloseOnLaunch)
             AppWM.HideCommand.Invoke();
     }
     
@@ -87,52 +87,52 @@ public partial class InstallationProfile : ObservableObject
             Watermark = "New Profile Name"
         };
         
-        var dialog = new ContentDialog
-        {
-            Title = $"Rename \"{Name}\"",
-            Content = textBox,
-            CloseButtonText = "Cancel",
-            PrimaryButtonText = "Rename",
-            PrimaryButtonCommand = new RelayCommand(() =>
+        Info.Dialog($"Rename \"{Name}\"", content: textBox, buttons: [
+            new DialogButton
             {
-                if (string.IsNullOrWhiteSpace(textBox.Text)) return;
-                
-                Name = textBox.Text;
-            })
-        };
+                Text = "Rename",
+                Action = () =>
+                {
+                    var newName = string.Empty;
+                    TaskService.RunDispatcher(() => newName = textBox.Text);
+                    
+                    if (string.IsNullOrWhiteSpace(newName))
+                        return;
 
-        await dialog.ShowAsync();
+                    Name = newName;
+                }
+            }
+        ]);
     }
     
     public async Task OpenFolder()
     {
-        LaunchSelected(ExecutablePath);
+        AppServices.App.LaunchSelected(ExecutablePath);
     }
     
     public async Task ChangeVersionPrompt()
     {
         var comboBox = new ComboBox
         {
-            ItemsSource = AppSettings.Current.DownloadedVersions,
+            ItemsSource = AppSettings.Application.DownloadedVersions,
             SelectedIndex = 0,
             HorizontalAlignment = HorizontalAlignment.Stretch
         };
         
-        var dialog = new ContentDialog
-        {
-            Title = $"Change Version of \"{Name}\"",
-            Content = comboBox,
-            CloseButtonText = "Cancel",
-            PrimaryButtonText = "Change",
-            PrimaryButtonCommand = new RelayCommand(() =>
+        Info.Dialog($"Change Version of \"{Name}\"", content: comboBox, buttons: [
+            new DialogButton
             {
-                if (comboBox.SelectedItem is not InstallationVersion newVersion) return;
+                Text = "Change",
+                Action = () =>
+                {
+                    InstallationVersion? newVersion = null;
+                    TaskService.RunDispatcher(() => newVersion = comboBox.SelectedItem as InstallationVersion);
+                    if (newVersion is null) return;
 
-                ChangeVersion(newVersion);
-            })
-        };
-
-        await dialog.ShowAsync();
+                    ChangeVersion(newVersion);
+                }
+            }
+        ]);
     }
     
     public async Task Update()
@@ -143,8 +143,10 @@ public partial class InstallationProfile : ObservableObject
     public async Task Update(bool verbose)
     {
         if (ProfileType != EProfileType.Repository) return;
+
+        await Repositories.Refresh();
         
-        var targetRepository = RepositoriesVM.Repositories.FirstOrDefault(repo => repo.RepositoryUrl.Equals(RepositoryUrl));
+        var targetRepository = Repositories.Repositories.Items.FirstOrDefault(repo => repo.RepositoryUrl.Equals(RepositoryUrl));
             
         var newestVersion = targetRepository?.Versions.MaxBy(version => version.Version);
         if (newestVersion is null) return;
@@ -152,7 +154,7 @@ public partial class InstallationProfile : ObservableObject
         if (newestVersion.Version <= Version)
         {
             if (verbose)
-                AppWM.Message("Update", $"{Name} is up to date");
+                Info.Message("Update", $"{Name} is up to date");
             
             Log.Information($"Profile \"{Name}\" is up to date");
             return;
@@ -162,7 +164,7 @@ public partial class InstallationProfile : ObservableObject
         ChangeVersion(await newestVersion.DownloadInstallationVersion(), verbose: false);
             
         if (verbose)
-            AppWM.Message("Update", $"{Name} was updated from \"{oldVersion}\" to \"{Version}\"");
+            Info.Message("Update", $"{Name} was updated from \"{oldVersion}\" to \"{Version}\"");
         
         Log.Information($"{Name} was updated from \"{oldVersion}\" to \"{Version}\"");
     }
@@ -171,7 +173,7 @@ public partial class InstallationProfile : ObservableObject
     {
         if (ProfileType != EProfileType.Repository) return;
         
-        var targetRepository = RepositoriesVM.Repositories.FirstOrDefault(repo => repo.RepositoryUrl.Equals(RepositoryUrl));
+        var targetRepository = Repositories.Repositories.Items.FirstOrDefault(repo => repo.RepositoryUrl.Equals(RepositoryUrl));
             
         var newestVersion = targetRepository?.Versions.MaxBy(version => version.Version);
         if (newestVersion is null) return;
@@ -196,7 +198,7 @@ public partial class InstallationProfile : ObservableObject
         Version = newVersion.Version;
         
         if (verbose)
-            AppWM.Message("Update", $"{Name} was changed to \"{Version}\"");
+            Info.Message("Update", $"{Name} was changed to \"{Version}\"");
     }
 
     public async Task DeleteAndCleanup()
@@ -212,9 +214,9 @@ public partial class InstallationProfile : ObservableObject
 
 public enum EProfileType
 {
-    [Description("From Repository")]
+    [Description("Repository Latest Version")]
     Repository,
     
-    [Description("Custom Version")]
+    [Description("Downloaded Version")]
     Custom
 }

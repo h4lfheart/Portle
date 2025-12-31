@@ -13,18 +13,27 @@ using Portle.Application;
 using Portle.Extensions;
 using Portle.Framework;
 using Portle.Models.Downloads;
+using Portle.Models.Information;
 using Portle.Models.Installation;
+using Portle.Services;
 using ReactiveUI;
 
 namespace Portle.ViewModels;
 
 public partial class ProfilesViewModel : ViewModelBase
 {
+    [ObservableProperty] private RepositoryService _repositoryService;
+
+    public ProfilesViewModel(RepositoryService repositoryService) : this()
+    {
+        RepositoryService = repositoryService;
+    } 
+    
     [ObservableProperty] private string _searchFilter = string.Empty;
     
     [ObservableProperty] private ReadOnlyObservableCollection<InstallationProfile> _profiles = new([]);
     
-    [JsonIgnore] public bool CanCreateProfile => AppSettings.Current.DownloadedVersions.Count > 0 || AppSettings.Current.Repositories.Count > 0;
+    [JsonIgnore] public bool CanCreateProfile => AppSettings.Application.DownloadedVersions.Count > 0 || AppSettings.Application.Repositories.Count > 0;
     
     public readonly SourceList<InstallationProfile> ProfilesSource = new();
 
@@ -45,15 +54,21 @@ public partial class ProfilesViewModel : ViewModelBase
         
         Profiles = collection;
 
-        foreach (var profile in AppSettings.Current.Profiles.ToArray())
+        foreach (var profile in AppSettings.Application.Profiles.ToArray())
         {
             if (!File.Exists(profile.ExecutablePath))
             {
-                AppSettings.Current.Profiles.Remove(profile);
+                AppSettings.Application.Profiles.Remove(profile);
             } 
         }
         
-        ProfilesSource.AddRange(AppSettings.Current.Profiles);
+        ProfilesSource.AddRange(AppSettings.Application.Profiles);
+    }
+
+    public override async Task Initialize()
+    {
+        
+        await UpdateRepositoryProfiles();
     }
 
     public async Task UpdateRepositoryProfiles()
@@ -67,6 +82,7 @@ public partial class ProfilesViewModel : ViewModelBase
             await profile.Update(verbose: false);
         }
     }
+    
 
     public override async Task OnViewOpened()
     {
@@ -76,123 +92,120 @@ public partial class ProfilesViewModel : ViewModelBase
     public async Task CreateProfile()
     {
         var content = new CreateProfileDialog();
-        var dialog = new ContentDialog
-        {
-            Title = "Create New Profile",
-            Content = content,
-            CloseButtonText = "Cancel",
-            PrimaryButtonText = "Create",
-            PrimaryButtonCommand = new RelayCommand(async () =>
+        
+        Info.Dialog("Create New Profile", content: content, buttons: [
+            new DialogButton
             {
-                if (content.DataContext is not CreateProfileDialogContext dialogContext) return;
-                
-                InstallationVersion targetVersion;
-                if (dialogContext.ProfileType == EProfileType.Repository)
+                Text = "Create",
+                Action = () => TaskService.Run(async () =>
                 {
-                    var targetDownloadVersion = Enumerable
-                        .MaxBy<DownloadVersion, DateTime>(dialogContext.SelectedRepository.Versions, version => version.UploadTime)!;
+                    CreateProfileDialogContext? dialogContext = null;
+                    await TaskService.RunDispatcherAsync(() => dialogContext = content.DataContext as CreateProfileDialogContext);
+                    if (dialogContext is null) return;
+                
+                    InstallationVersion targetVersion;
+                    if (dialogContext.ProfileType == EProfileType.Repository)
+                    {
+                        var targetDownloadVersion = dialogContext.SelectedRepository.Versions
+                            .MaxBy(version => version.UploadTime);
+                        if (targetDownloadVersion is null)
+                            return;
 
-                    targetVersion = await targetDownloadVersion.DownloadInstallationVersion();
-                }
-                else
-                {
-                    targetVersion = dialogContext.SelectedVersion;
-                }
+                        targetVersion = await targetDownloadVersion.DownloadInstallationVersion();
+                    }
+                    else
+                    {
+                        targetVersion = dialogContext.SelectedVersion;
+                    }
                 
-                var id = Guid.NewGuid();
-                var profilePath = Path.Combine(AppSettings.Current.InstallationPath, id.ToString());
-                Directory.CreateDirectory(profilePath);
+                    var id = Guid.NewGuid();
+                    var profilePath = Path.Combine(AppSettings.Application.InstallationPath, id.ToString());
+                    Directory.CreateDirectory(profilePath);
                 
-                var profile = new InstallationProfile
-                {
-                    ProfileType = dialogContext.ProfileType,
-                    Name = dialogContext.ProfileType == EProfileType.Repository ? targetVersion.RepositoryName : targetVersion.Name,
-                    Version = targetVersion.Version,
-                    Directory = profilePath,
-                    ExecutableName = Path.GetFileName((string?)targetVersion.ExecutablePath),
-                    Id = id,
-                    IconUrl = targetVersion.IconUrl,
-                    RepositoryUrl = targetVersion.RepositoryUrl
-                };
+                    var profile = new InstallationProfile
+                    {
+                        ProfileType = dialogContext.ProfileType,
+                        Name = dialogContext.ProfileType == EProfileType.Repository ? targetVersion.RepositoryName : targetVersion.Name,
+                        Version = targetVersion.Version,
+                        Directory = profilePath,
+                        ExecutableName = Path.GetFileName((string?)targetVersion.ExecutablePath),
+                        Id = id,
+                        IconUrl = targetVersion.IconUrl,
+                        RepositoryUrl = targetVersion.RepositoryUrl
+                    };
                 
-                File.Copy(targetVersion.ExecutablePath, profile.ExecutablePath);
+                    File.Copy(targetVersion.ExecutablePath, profile.ExecutablePath);
                 
-                ProfilesSource.Add(profile);
-                
-            })
-        };
-
-        await dialog.ShowAsync();
+                    ProfilesSource.Add(profile);
+                })
+            }
+        ]);
     }
 
     public async Task ImportInstallation()
     {
-        if (await BrowseFileDialog(fileTypes: [Globals.ExecutableFileType]) is not { } executablePath) return;
+        if (await App.BrowseFileDialog(fileTypes: [Globals.ExecutableFileType]) is not { } executablePath) return;
         
         var content = new CreateProfileDialog();
-        var dialog = new ContentDialog
-        {
-            Title = "Import Installation",
-            Content = content,
-            CloseButtonText = "Cancel",
-            PrimaryButtonText = "Import",
-            PrimaryButtonCommand = new RelayCommand(async () =>
+        
+        Info.Dialog("Import New Profile", content: content, buttons: [
+            new DialogButton
             {
-                if (content.DataContext is not CreateProfileDialogContext dialogContext) return;
+                Text = "Create",
+                Action = () => TaskService.Run(async () =>
+                {
+                    CreateProfileDialogContext? dialogContext = null;
+                    await TaskService.RunDispatcherAsync(() => dialogContext = content.DataContext as CreateProfileDialogContext);
+                    if (dialogContext is null) return;
+                
+                    InstallationVersion targetVersion;
+                    if (dialogContext.ProfileType == EProfileType.Repository)
+                    {
+                        var targetDownloadVersion = dialogContext.SelectedRepository.Versions
+                            .MaxBy(version => version.UploadTime)!;
 
-                InstallationVersion targetVersion;
-                if (dialogContext.ProfileType == EProfileType.Repository)
-                {
-                    var targetDownloadVersion = Enumerable
-                        .MaxBy<DownloadVersion, DateTime>(dialogContext.SelectedRepository.Versions, version => version.UploadTime)!;
-
-                    targetVersion = await targetDownloadVersion.DownloadInstallationVersion();
-                }
-                else
-                {
-                    targetVersion = dialogContext.SelectedVersion;
-                }
+                        targetVersion = await targetDownloadVersion.DownloadInstallationVersion();
+                    }
+                    else
+                    {
+                        targetVersion = dialogContext.SelectedVersion;
+                    }
                 
-                var id = Guid.NewGuid();
+                    var id = Guid.NewGuid();
                 
-                var profile = new InstallationProfile
-                {
-                    ProfileType = dialogContext.ProfileType,
-                    Name = Path.GetFileNameWithoutExtension(executablePath),
-                    Version = targetVersion.Version,
-                    Directory = Path.GetDirectoryName(executablePath)!,
-                    ExecutableName = Path.GetFileName(executablePath),
-                    Id = id,
-                    IconUrl = targetVersion.IconUrl,
-                    RepositoryUrl = targetVersion.RepositoryUrl
-                };
+                    var profile = new InstallationProfile
+                    {
+                        ProfileType = dialogContext.ProfileType,
+                        Name = Path.GetFileNameWithoutExtension(executablePath),
+                        Version = targetVersion.Version,
+                        Directory = Path.GetDirectoryName(executablePath)!,
+                        ExecutableName = Path.GetFileName(executablePath),
+                        Id = id,
+                        IconUrl = targetVersion.IconUrl,
+                        RepositoryUrl = targetVersion.RepositoryUrl
+                    };
                 
-                File.Copy(targetVersion.ExecutablePath, profile.ExecutablePath, true);
+                    File.Copy(targetVersion.ExecutablePath, profile.ExecutablePath, true);
                 
-                ProfilesSource.Add(profile);
-                
-            })
-        };
-            
-        await dialog.ShowAsync();
+                    ProfilesSource.Add(profile);
+                })
+            }
+        ]);
     }
     
 
     public async Task Delete(InstallationProfile profile)
     {
-        var dialog = new ContentDialog
-        {
-            Title = $"Delete \"{profile.Name}\"",
-            Content = "Are you sure you want to delete this profile?",
-            CloseButtonText = "No",
-            PrimaryButtonText = "Yes",
-            PrimaryButtonCommand = new RelayCommand(async () =>
+        Info.Dialog($"Delete \"{profile.Name}\"", "Are you sure you want to delete this profile?", buttons: [
+            new DialogButton
             {
-                await profile.DeleteAndCleanup();
-                ProfilesSource.Remove(profile);
-            })
-        };
-
-        await dialog.ShowAsync();
+                Text = "Delete",
+                Action = () => TaskService.Run(async () =>
+                {
+                    await profile.DeleteAndCleanup();
+                    ProfilesSource.Remove(profile);
+                })
+            }
+        ]);
     }
 }

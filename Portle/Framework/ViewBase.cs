@@ -1,16 +1,18 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Microsoft.Extensions.DependencyInjection;
+using Portle.Application;
 using Portle.Services;
 
 namespace Portle.Framework;
 
-public abstract class ViewBase<T> : UserControl where T : ViewModelBase, new()
+public abstract class ViewBase<T> : UserControl where T : ViewModelBase
 {
     protected readonly T ViewModel;
 
-    public ViewBase(ViewModelBase? templateViewModel = null, bool initializeViewModel = true)
+    public ViewBase(T? templateViewModel = null, bool initializeViewModel = true)
     {
-        ViewModel = templateViewModel is not null ? ViewModelRegistry.Register<T>(templateViewModel) : ViewModelRegistry.New<T>();
+        ViewModel = templateViewModel ?? AppServices.Services.GetRequiredService<T>();
         DataContext = ViewModel;
 
         if (initializeViewModel)

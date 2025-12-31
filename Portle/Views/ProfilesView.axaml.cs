@@ -5,7 +5,7 @@ namespace Portle.Views;
 
 public partial class ProfilesView : ViewBase<ProfilesViewModel>
 {
-    public ProfilesView() : base(ProfilesVM, initializeViewModel: false)
+    public ProfilesView()
     {
         InitializeComponent();
     }

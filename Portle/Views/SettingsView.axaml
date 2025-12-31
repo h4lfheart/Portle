@@ -8,58 +8,52 @@
              xmlns:viewModels1="clr-namespace:Portle.ViewModels"
              xmlns:materialIcon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:viewModels11="clr-namespace:Portle.ViewModels"
+             xmlns:settings="clr-namespace:Portle.Controls.Settings"
+             xmlns:controls="clr-namespace:Portle.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="Portle.Views.SettingsView"
              x:DataType="viewModels11:SettingsViewModel">
-    <Grid>
-        <ScrollViewer Grid.Row="2" Margin="{ext:Space 1}">
-            <StackPanel Margin="{Binding $parent[ScrollViewer], Converter={StaticResource ScrollViewerMargin}}">
-                <StackPanel.Styles>
-                    <Style Selector="ui|SettingsExpander">
-                        <Setter Property="Margin" Value="0 0 0 4"/>
-                    </Style>
-                </StackPanel.Styles>
-                
-                <ui:SettingsExpander Header="Installation Location" Description="The directory where Portle installations will be stored.">
-                    <ui:SettingsExpander.Footer>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox Text="{Binding InstallationPath}" Watermark="Installation Path"/>
-                            <Button Margin="4 0 0 0" Command="{Binding BrowseInstallationPath}">
-                                <ui:SymbolIcon Symbol="Folder"/>
-                            </Button>
-                        </StackPanel>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                
-                <ui:SettingsExpander Header="Download Location" Description="The directory where Portle versions will be downloaded.">
-                    <ui:SettingsExpander.Footer>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox Text="{Binding DownloadsPath}" Watermark="Download Path"/>
-                            <Button Margin="4 0 0 0" Command="{Binding BrowseDownloadsPath}">
-                                <ui:SymbolIcon Symbol="Folder"/>
-                            </Button>
-                        </StackPanel>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                
-                <ui:SettingsExpander Header="Launch on Startup" Description="Whether or not to open the launcher on startup">
-                    <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding LaunchOnStartup}"/>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                
-                <ui:SettingsExpander Header="Minimize to Tray" Description="Whether or not to minimize the application to the system tray on exit">
-                    <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding MinimizeToTray, Mode=TwoWay}"/>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                
-                <ui:SettingsExpander Header="Hide on Launch" Description="Whether or not to minimize the application to the system tray after launching a profile">
-                    <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding CloseOnLaunch, Mode=TwoWay}"/>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+    <controls:DynamicFadeScrollViewer Margin="{ext:Space 1}">
+        <StackPanel Spacing="{ext:Space 1}">
+            <settings:SettingsItem Title="Installation Location" Description="The directory where Portle installations will be stored.">
+                <settings:SettingsItem.Footer>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox Text="{Binding InstallationPath}" Watermark="Installation Path"/>
+                        <Button Margin="4 0 0 0" Command="{Binding BrowseInstallationPath}">
+                            <ui:SymbolIcon Symbol="Folder"/>
+                        </Button>
+                    </StackPanel>
+                </settings:SettingsItem.Footer>
+            </settings:SettingsItem>
+            
+            <settings:SettingsItem Title="Download Location" Description="The directory where Portle versions will be downloaded.">
+                <settings:SettingsItem.Footer>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox Text="{Binding DownloadsPath}" Watermark="Download Path"/>
+                        <Button Margin="4 0 0 0" Command="{Binding BrowseDownloadsPath}">
+                            <ui:SymbolIcon Symbol="Folder"/>
+                        </Button>
+                    </StackPanel>
+                </settings:SettingsItem.Footer>
+            </settings:SettingsItem>
+            
+            <settings:SettingsItem Title="Launch on Startup" Description="Whether or not to open the launcher on startup">
+                <settings:SettingsItem.Footer>
+                    <ToggleSwitch IsChecked="{Binding LaunchOnStartup}"/>
+                </settings:SettingsItem.Footer>
+            </settings:SettingsItem>
+            
+            <settings:SettingsItem Title="Minimize to Tray" Description="Whether or not to minimize the application to the system tray on exit">
+                <settings:SettingsItem.Footer>
+                    <ToggleSwitch IsChecked="{Binding MinimizeToTray, Mode=TwoWay}"/>
+                </settings:SettingsItem.Footer>
+            </settings:SettingsItem>
+            
+            <settings:SettingsItem Title="Hide on Launch" Description="Whether or not to minimize the application to the system tray after launching a profile">
+                <settings:SettingsItem.Footer>
+                    <ToggleSwitch IsChecked="{Binding CloseOnLaunch, Mode=TwoWay}"/>
+                </settings:SettingsItem.Footer>
+            </settings:SettingsItem>
+        </StackPanel>
+    </controls:DynamicFadeScrollViewer>
 </UserControl>

@@ -9,7 +9,9 @@ using FluentAvalonia.UI.Controls;
 using Newtonsoft.Json;
 using Portle.Application;
 using Portle.Extensions;
+using Portle.Models.Information;
 using Portle.Models.Installation;
+using Portle.Services;
 
 namespace Portle.Models.Downloads;
 
@@ -28,7 +30,7 @@ public partial class DownloadVersion : ObservableObject
 
     public bool IsDownloaded => File.Exists(ExecutableDownloadPath) && !IsCurrentlyDownloading;
 
-    public string ExecutableDownloadPath => Path.Combine(AppSettings.Current.DownloadsPath, ParentRepository.Title, Version.ToString(), StringExtensions.SubstringAfterLast(ExecutableUrl, "/"));
+    public string ExecutableDownloadPath => Path.Combine(AppSettings.Application.DownloadsPath, ParentRepository.Title, Version.ToString(), ExecutableUrl.SubstringAfterLast("/"));
 
     public InstallationVersion CreateInstallationVersion()
     {
@@ -57,13 +59,13 @@ public partial class DownloadVersion : ObservableObject
         }
         
         IsCurrentlyDownloading = true;
-        var downloadedFile = await ApiVM.DownloadFileAsync(ExecutableUrl, ExecutableDownloadPath, progress => DownloadProgressFraction = progress);
+        var downloadedFile = await Api.DownloadFileAsync(ExecutableUrl, ExecutableDownloadPath, progress => DownloadProgressFraction = progress);
         IsCurrentlyDownloading = false;
         DownloadProgressFraction = 0;
         
         if (!downloadedFile.Exists)
         {
-            AppWM.Message("Downloads", $"Failed to download {ExecutableUrl}", InfoBarSeverity.Error);
+            Info.Message("Downloads", $"Failed to download {ExecutableUrl}", InfoBarSeverity.Error);
             return null;
         }
         
@@ -71,7 +73,7 @@ public partial class DownloadVersion : ObservableObject
 
         var installationVersion = CreateInstallationVersion();
 
-        AppSettings.Current.DownloadedVersions.Add(installationVersion);
+        AppSettings.Application.DownloadedVersions.Add(installationVersion);
 
         return installationVersion;
     }
@@ -83,16 +85,15 @@ public partial class DownloadVersion : ObservableObject
             .Where(profile => profile.Version.Equals(Version))
             .ToArray();
 
-        var cancelledDeletion = false;
-        if (profilesUsingVersion.Length > 0)
-        {
-            var dialog = new ContentDialog
+        var dialogText = profilesUsingVersion.Length > 0 
+            ? $"Are you sure you would like to delete {DisplayString}? There {(profilesUsingVersion.Length == 1 ? $"is {profilesUsingVersion.Length} profile that relies" : $"are {profilesUsingVersion.Length} profiles that rely")} on this version."
+            : $"Are you sure you would like to delete {DisplayString}?";
+        
+        Info.Dialog($"Delete \"{DisplayString}\"", dialogText, buttons: [
+            new DialogButton
             {
-                Title = $"Delete \"{DisplayString}\"",
-                Content =
-                    $"Are you sure you would like to delete this version? There {(profilesUsingVersion.Length == 1 ? $"is {profilesUsingVersion.Length} profile that relies" : $"are {profilesUsingVersion.Length} profiles that rely")} on this version.",
-                PrimaryButtonText = "Delete",
-                PrimaryButtonCommand = new RelayCommand(async () =>
+                Text = "Delete",
+                Action = () => TaskService.Run(async () =>
                 {
                     // remove associated profiles
                     foreach (var profile in profilesUsingVersion)
@@ -100,21 +101,17 @@ public partial class DownloadVersion : ObservableObject
                         await profile.DeleteAndCleanup();
                         ProfilesVM.ProfilesSource.Remove(profile);
                     }
-                }),
-                CloseButtonText = "Cancel",
-                CloseButtonCommand = new RelayCommand(() => cancelledDeletion = true)
-            };
+                    
+                    File.Delete(ExecutableDownloadPath);
+                    Directory.Delete(Path.Combine(AppSettings.Application.DownloadsPath, ParentRepository.Title, Version.ToString()));
 
-            await dialog.ShowAsync();
-        }
+                    AppSettings.Application.DownloadedVersions.RemoveAll(version => version.ExecutablePath == ExecutableDownloadPath);
         
-        if (cancelledDeletion) return;
+                    OnPropertyChanged(nameof(IsDownloaded));
+                })
+            }
+        ]);
         
-        File.Delete(ExecutableDownloadPath);
-        Directory.Delete(Path.Combine(AppSettings.Current.DownloadsPath, ParentRepository.Title, Version.ToString()));
-
-        AppSettings.Current.DownloadedVersions.RemoveAll(version => version.ExecutablePath == ExecutableDownloadPath);
         
-        OnPropertyChanged(nameof(IsDownloaded));
     }
 }

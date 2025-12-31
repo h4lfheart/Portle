@@ -1,13 +1,17 @@
 using System;
+using System.IO;
+using System.Linq;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using FluentAvalonia.Styling;
 using Portle.Extensions;
 using Portle.Services;
 
 namespace Portle.Application;
 
-public partial class App : Avalonia.Application
+public partial class PortleApp : Avalonia.Application
 {
     public override void Initialize()
     {
@@ -16,12 +20,19 @@ public partial class App : Avalonia.Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
         BindingPlugins.DataValidators.RemoveAll(validator => validator is DataAnnotationsValidationPlugin);
+
+        if (Styles.OfType<FluentAvaloniaTheme>().FirstOrDefault() is { } fluentTheme)
+        {
+            fluentTheme.CustomAccentColor = Color.Parse("#303030");
+        }
+        
+        AppServices.Initialize();
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            ApplicationService.Application = desktop;
-            ApplicationService.Initialize();
+            App.InitializeDesktop(desktop);
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -29,11 +40,11 @@ public partial class App : Avalonia.Application
 
     private void OnTrayIconOpen(object? sender, EventArgs e)
     {
-        OpenAppWindow();
+        App.OpenWindow();
     }
 
     private void OnTrayIconQuit(object? sender, EventArgs eventArgs)
     {
-        ApplicationService.Application.Shutdown();
+        App.Lifetime.Shutdown();
     }
 }

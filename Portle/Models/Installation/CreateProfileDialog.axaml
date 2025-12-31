@@ -9,7 +9,8 @@
              xmlns:installation1="clr-namespace:Portle.Models.Installation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Portle.Models.Installation.CreateProfileDialog"
-             x:DataType="installation1:CreateProfileDialogContext">
+             x:DataType="installation1:CreateProfileDialogContext"
+             ClipToBounds="False">
     <StackPanel>
         <TextBlock Text="Profile Type" Classes="BodyStrongTextBlockStyle" Margin="{ext:Space 0, 0, 0, 1}"/>
         <ComboBox
@@ -30,12 +31,12 @@
                       HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="{ext:Space 1}" Spacing="{ext:Space 1}">
                             <Image asyncImageLoader:ImageLoader.Source="{Binding IconUrl}" 
-                                   Width="24" Height="24" Margin="{ext:Space 0, 0, 1, 0}"
+                                   Width="24" Height="24" 
                                    RenderOptions.BitmapInterpolationMode="MediumQuality"/>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Title}" Margin="{ext:Space 0, 0, 0, 1}"/>
+                            <StackPanel Spacing="{ext:Space 0.5}">
+                                <TextBlock Text="{Binding Title}"/>
                                 <TextBlock Text="{Binding Description}" Classes="CaptionTextBlockStyle TextFillColorTertiaryBrush"/>
                             </StackPanel>
                         </StackPanel>
@@ -46,15 +47,24 @@
         
         <StackPanel IsVisible="{Binding ProfileType, 
             Converter={StaticResource EnumEquals}, 
-            ConverterParameter={x:Static installation1:EProfileType.Custom}}">
-            <TextBlock Text="Version" Classes="BodyStrongTextBlockStyle" Margin="{ext:Space 0, 0, 0, 1}"/>
+            ConverterParameter={x:Static installation1:EProfileType.Custom}}"
+                    Spacing="{ext:Space 1}">
+            
+            <TextBlock Text="Version" Classes="BodyStrongTextBlockStyle"/>
+            
             <ComboBox ItemsSource="{Binding Versions}" 
                       SelectedItem="{Binding SelectedVersion, Mode=TwoWay, TargetNullValue='No Versions Downloaded'}"
                       HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel>
-                            <TextBlock Text="{Binding Name}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="{ext:Space 1}">
+                            <Image Width="16" Height="16" asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"
+                                   RenderOptions.BitmapInterpolationMode="MediumQuality" RenderOptions.EdgeMode="Antialias"/>
+                            <TextBlock Text="{Binding RepositoryName}"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Version}" 
+                                       VerticalAlignment="Center"
+                                       Classes="CaptionTextBlockStyle TextFillColorSecondaryBrush"/>
                         </StackPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>

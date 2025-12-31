@@ -1,44 +1,61 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Portle.Application;
 using Portle.Extensions;
 using Portle.Framework;
 using Portle.Models.Downloads;
+using Portle.Models.Information;
 using Portle.Models.Repository;
+using Portle.Services;
+using ReactiveUI;
 using Serilog;
 
 namespace Portle.ViewModels;
 
 public partial class RepositoriesViewModel : ViewModelBase
 {
-    [ObservableProperty] private ObservableCollection<DownloadRepository> _repositories = [];
+    [ObservableProperty] private RepositoryService _repositoryService;
 
-    public override async Task Initialize()
+    public RepositoriesViewModel(RepositoryService repositoryService)
     {
-        await Refresh();
-
-        await ProfilesVM.UpdateRepositoryProfiles();
+        RepositoryService = repositoryService;
+        
+        var repoFilter = this
+            .WhenAnyValue(viewModel => viewModel.SearchFilter)
+            .Select(searchFilter =>
+            {
+                return new Func<DownloadRepository, bool>(repository => MiscExtensions.Filter(repository.Title, searchFilter));
+            });
+        
+        RepositoryService.Repositories.Connect()
+            .Filter(repoFilter)
+            .Sort(SortExpressionComparer<DownloadRepository>.Descending(x => x.Title))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Bind(out var repoCollection)
+            .Subscribe();
+        
+        Repositories = repoCollection;
     }
-
+    
+    [ObservableProperty] private string _searchFilter = string.Empty;
+    [ObservableProperty] private ReadOnlyObservableCollection<DownloadRepository> _repositories = new([]);
+    
     [RelayCommand]
     public async Task Refresh()
     {
-        Repositories.Clear();
-        
-        foreach (var repositoryUrlContainer in AppSettings.Current.Repositories)
-        {
-            if (await ApiVM.Misc.GetRepositoryAsync(repositoryUrlContainer.RepositoryUrl) is not { } repositoryResponse) continue;
-
-            Repositories.Add(new DownloadRepository(repositoryResponse, repositoryUrlContainer.RepositoryUrl));
-        }
+        await RepositoryService.Refresh();
     }
 
+    [RelayCommand]
     public async Task AddRepository()
     {
         var textBox = new TextBox
@@ -46,56 +63,37 @@ public partial class RepositoriesViewModel : ViewModelBase
             Watermark = "Repository URL"
         };
         
-        var dialog = new ContentDialog
-        {
-            Title = "Add New Repository",
-            Content = textBox,
-            CloseButtonText = "Cancel",
-            PrimaryButtonText = "Add",
-            PrimaryButtonCommand = new RelayCommand(async () =>
+        Info.Dialog("Add Repository", content: textBox, buttons: [
+            new DialogButton
             {
-                var newUrl = textBox.Text;
-                if (string.IsNullOrWhiteSpace(newUrl)) return;
+                Text = "Add",
+                Action = () =>
+                {
+                    var repositoryUrl = string.Empty;
+                    TaskService.RunDispatcher(() => repositoryUrl = textBox.Text);
+                    
+                    if (string.IsNullOrWhiteSpace(repositoryUrl))
+                        return;
 
-                await AddRepository(newUrl, verbose: true);
-            })
-        };
-
-        await dialog.ShowAsync();
-    }
-
-    public async Task AddRepository(string url, bool verbose = false)
-    {
-        if (AppSettings.Current.Repositories.Any(repo => repo.RepositoryUrl.Equals(url, StringComparison.OrdinalIgnoreCase)))
-        {
-            if (verbose)
-                AppWM.Message("Repositories", $"A repository already exists with the url \"{url}\"");
-            return;
-        }
-        
-        Log.Information($"Added new repository at {url}");
-        AppSettings.Current.Repositories.Add(new RepositoryUrlContainer(url));
-        await Refresh();
-        await DownloadsVM.Refresh();
+                    TaskService.Run(async () => await RepositoryService.AddRepository(repositoryUrl));
+                }
+            }
+        ]);
     }
     
+    [RelayCommand]
     public async Task Delete(DownloadRepository repository)
     {
-        var dialog = new ContentDialog
-        {
-            Title = $"Remove \"{repository.Title}\"",
-            Content = "Are you sure you want to remove this repository?",
-            CloseButtonText = "No",
-            PrimaryButtonText = "Yes",
-            PrimaryButtonCommand = new RelayCommand(async () =>
+        Info.Dialog($"Remove \"{repository.Title}\"", "Are you sure you want to remove this repository?", buttons: [
+            new DialogButton
             {
-                AppSettings.Current.Repositories.RemoveAll(repo => repo.RepositoryUrl.Equals(repository.RepositoryUrl));
-                await Refresh();
-                await DownloadsVM.Refresh();
-            })
-        };
-
-        await dialog.ShowAsync();
+                Text = "Remove",
+                Action = () =>
+                {
+                    RepositoryService.RemoveRepository(repository);
+                }
+            }
+        ]);
     }
     
 }

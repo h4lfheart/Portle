@@ -21,11 +21,11 @@ public partial class CreateProfileDialogContext : ObservableObject
     [ObservableProperty] private EProfileType _profileType;
 
     // repository
-    [ObservableProperty] private DownloadRepository _selectedRepository = RepositoriesVM.Repositories.FirstOrDefault()!;
-    [ObservableProperty] private ObservableCollection<DownloadRepository> _repositories = RepositoriesVM.Repositories;
+    [ObservableProperty] private DownloadRepository _selectedRepository = AppServices.Repositories.Repositories.Items.FirstOrDefault()!;
+    [ObservableProperty] private ObservableCollection<DownloadRepository> _repositories = [..AppServices.Repositories.Repositories.Items];
     
     // custom
-    [ObservableProperty] private InstallationVersion _selectedVersion = AppSettings.Current.DownloadedVersions.FirstOrDefault()!;
-    [ObservableProperty] private ObservableCollection<InstallationVersion> _versions = AppSettings.Current.DownloadedVersions;
+    [ObservableProperty] private InstallationVersion _selectedVersion = AppSettings.Application.DownloadedVersions.FirstOrDefault()!;
+    [ObservableProperty] private ObservableCollection<InstallationVersion> _versions = AppSettings.Application.DownloadedVersions;
     
 }

@@ -19,7 +19,7 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private bool _minimizeToTray = false;
     [ObservableProperty] private bool _closeOnLaunch = false;
     
-    [ObservableProperty] private ObservableCollection<RepositoryUrlContainer> _repositories = [];
+    [ObservableProperty] private ObservableCollection<string> _repositories = [];
     [ObservableProperty] private ObservableCollection<InstallationVersion> _downloadedVersions = [];
     [ObservableProperty] private ObservableCollection<InstallationProfile> _profiles = [];
     
@@ -27,7 +27,7 @@ public partial class SettingsViewModel : ViewModelBase
     
     public async Task BrowseInstallationPath()
     {
-        if (await BrowseFolderDialog() is { } path)
+        if (await App.BrowseFolderDialog() is { } path)
         {
             InstallationPath = path;
         }
@@ -35,7 +35,7 @@ public partial class SettingsViewModel : ViewModelBase
     
     public async Task BrowseDownloadsPath()
     {
-        if (await BrowseFolderDialog() is { } path)
+        if (await App.BrowseFolderDialog() is { } path)
         {
             DownloadsPath = path;
         }

@@ -8,10 +8,12 @@
              xmlns:viewModels1="clr-namespace:Portle.ViewModels"
              xmlns:materialIcon="clr-namespace:Material.Icons.Avalonia;assembly=Material.Icons.Avalonia"
              xmlns:viewModels11="clr-namespace:Portle.ViewModels"
+             xmlns:controls="clr-namespace:Portle.Controls.Settings"
+             xmlns:controls1="clr-namespace:Portle.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="Portle.Views.SetupView"
              x:DataType="viewModels11:SetupViewModel">
-    <Grid>
+    <Grid Margin="{ext:Space 1}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="{ext:Space 1}"/>
@@ -20,79 +22,76 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="0" VerticalAlignment="Center">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="{ext:Space 1}"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>   
             
-            <TextBlock Grid.Row="0" Text="Portle Setup" Classes="TitleLargeTextBlockStyle" HorizontalAlignment="Center"
-                       VerticalAlignment="Center" TextWrapping="WrapWithOverflow" TextAlignment="Center" Margin="{ext:Space 0, 5, 0, 0}">
+            <TextBlock Grid.Row="0" FontFamily="{StaticResource SFDisplayBold}" FontSize="40"
+                       HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock.Effect>
-                    <DropShadowEffect BlurRadius="15" Color="#5F000000" OffsetX="0" OffsetY="0" />
+                    <DropShadowEffect BlurRadius="15" Color="#8F000000" OffsetX="0" OffsetY="0" />
                 </TextBlock.Effect>
+                <Run Text="Welcome to"/>
+                <Run Text="Portle" Foreground="#27afeb"/>
             </TextBlock>
             
-            <TextBlock Grid.Row="1" Text="Please customize the important options below to your liking.&#x0a;They can be modified again in the settings tab."
+            <TextBlock Grid.Row="2" Text="The version manager for applications in the porting ecosystem."
                        HorizontalAlignment="Center" TextAlignment="Center"
-                       VerticalAlignment="Center" Classes="BodyTextBlockStyle" Margin="{ext:Space 0, 0, 0, 5}">
+                       VerticalAlignment="Center" Classes="BodyTextBlockStyle">
                 <TextBlock.Effect>
                     <DropShadowEffect BlurRadius="15" Color="#5F000000" OffsetX="0" OffsetY="0" />
                 </TextBlock.Effect>
             </TextBlock>
         </Grid>
         
-        <ScrollViewer Grid.Row="2" Margin="{ext:Space 1}">
-            <StackPanel Margin="{Binding $parent[ScrollViewer], Converter={StaticResource ScrollViewerMargin}}">
-                <StackPanel.Styles>
-                    <Style Selector="ui|SettingsExpander">
-                        <Setter Property="Margin" Value="0 0 0 4"/>
-                    </Style>
-                </StackPanel.Styles>
-                
-                <ui:SettingsExpander Header="Installation Location" Description="The directory where Portle installations will be stored.">
-                    <ui:SettingsExpander.Footer>
+        <controls1:DynamicFadeScrollViewer Grid.Row="2">
+            <StackPanel Margin="{Binding $parent[ScrollViewer], Converter={StaticResource ScrollViewerMargin}}" Spacing="{ext:Space 1}">
+                <controls:SettingsItem Title="Installation Location" Description="The directory where Portle installations will be stored.">
+                    <controls:SettingsItem.Footer>
                         <StackPanel Orientation="Horizontal">
                             <TextBox Text="{Binding InstallationPath}" Watermark="Installation Path"/>
                             <Button Margin="4 0 0 0" Command="{Binding BrowseInstallationPath}">
                                 <ui:SymbolIcon Symbol="Folder"/>
                             </Button>
                         </StackPanel>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
+                    </controls:SettingsItem.Footer>
+                </controls:SettingsItem>
                 
-                <ui:SettingsExpander Header="Download Location" Description="The directory where Portle versions will be downloaded.">
-                    <ui:SettingsExpander.Footer>
+                <controls:SettingsItem Title="Download Location" Description="The directory where Portle versions will be downloaded.">
+                    <controls:SettingsItem.Footer>
                         <StackPanel Orientation="Horizontal">
                             <TextBox Text="{Binding DownloadsPath}" Watermark="Download Path"/>
                             <Button Margin="4 0 0 0" Command="{Binding BrowseDownloadsPath}">
                                 <ui:SymbolIcon Symbol="Folder"/>
                             </Button>
                         </StackPanel>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
+                    </controls:SettingsItem.Footer>
+                </controls:SettingsItem>
                 
-                <ui:SettingsExpander Header="Launch on Startup" Description="Whether or not to open the launcher in the system tray on startup">
-                    <ui:SettingsExpander.Footer>
+                <controls:SettingsItem Title="Launch on Startup" Description="Whether or not to open the launcher in the system tray on startup">
+                    <controls:SettingsItem.Footer>
                         <ToggleSwitch IsChecked="{Binding LaunchOnStartup}"/>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
+                    </controls:SettingsItem.Footer>
+                </controls:SettingsItem>
                 
-                <ui:SettingsExpander Header="Minimize to Tray" Description="Whether or not to minimize the application to the system tray on exit">
-                    <ui:SettingsExpander.Footer>
+                <controls:SettingsItem Title="Minimize to Tray" Description="Whether or not to minimize the application to the system tray on exit">
+                    <controls:SettingsItem.Footer>
                         <ToggleSwitch IsChecked="{Binding MinimizeToTray, Mode=TwoWay}"/>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
+                    </controls:SettingsItem.Footer>
+                </controls:SettingsItem>
                 
-                <ui:SettingsExpander Header="Hide on Launch" Description="Whether or not to minimize the application to the system tray after launching a profile">
-                    <ui:SettingsExpander.Footer>
+                <controls:SettingsItem Title="Hide on Launch" Description="Whether or not to minimize the application to the system tray after launching a profile">
+                    <controls:SettingsItem.Footer>
                         <ToggleSwitch IsChecked="{Binding CloseOnLaunch, Mode=TwoWay}"/>
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
+                    </controls:SettingsItem.Footer>
+                </controls:SettingsItem>
             </StackPanel>
-        </ScrollViewer>
+        </controls1:DynamicFadeScrollViewer>
         
         <Button Grid.Row="4" Content="Continue" Command="{Binding ContinueCommand}"
-                HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{ext:Space 1}"/>
+                HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Grid>
 </UserControl>

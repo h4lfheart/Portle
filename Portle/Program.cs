@@ -57,7 +57,7 @@ internal static class Program
                     arguments[i] = reader.ReadString();
                 }
             
-                TaskService.RunDispatcher(() => ExecuteArguments(arguments));
+                TaskService.RunDispatcher(() => App.ExecuteArguments(arguments));
                 
                 pipe.Disconnect();
             }
@@ -83,7 +83,7 @@ internal static class Program
     }
     
     private static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
+        => AppBuilder.Configure<PortleApp>()
             .UsePlatformDetect()
             .LogToTrace()
             .With(new Win32PlatformOptions { CompositionMode = [Win32CompositionMode.WinUIComposition] });

@@ -13,81 +13,95 @@
              xmlns:viewModels1="clr-namespace:Portle.ViewModels"
              xmlns:views1="clr-namespace:Portle.Views"
              xmlns:installation1="clr-namespace:Portle.Models.Installation"
+             xmlns:settings="clr-namespace:Portle.Controls.Settings"
              xmlns:controls="clr-namespace:Portle.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="Portle.Views.ProfilesView"
              x:DataType="viewModels1:ProfilesViewModel">
-    <Grid>
+    <Grid Margin="{ext:Space 1}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="{ext:Space 0}"/>
+            <RowDefinition Height="{ext:Space 1}"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="{ext:Space 1}"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
-        <TextBox Grid.Row="0" Grid.Column="0" Watermark="Search..." Text="{Binding SearchFilter, Mode=TwoWay}" Margin="{ext:Space 1, 1, 1, 0}"/>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="{ext:Space 1}"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="{ext:Space 1}"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox Grid.Column="0" Watermark="Search..." Text="{Binding SearchFilter, Mode=TwoWay}"/>
+            
+            <Button Grid.Column="2" Command="{Binding ImportInstallation}">
+                <controls:IconText Icon="Import" Text="Import Installation"/>
+            </Button>
+            
+            <Button Grid.Column="4" Command="{Binding CreateProfile}">
+                <controls:IconText Icon="Add" Text="Create Profile"/>
+            </Button>
+            
+        </Grid>
         
-        <ItemsControl Grid.Row="2" ItemsSource="{Binding Profiles}" Margin="{ext:Space 1}">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <ui:SettingsExpander Header="{Binding Name}" Description="{Binding DescriptionString}" 
-                                         Margin="{ext:Space 0, 0, 0, 1}">
-                        <ui:SettingsExpander.IconSource>
-                            <ui:ImageIconSource Source="{Binding IconImage.Result}"/>
-                        </ui:SettingsExpander.IconSource>
-                        <ui:SettingsExpander.Footer>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="{avalonia:MaterialIconExt Launch}" Command="{Binding Launch}"
-                                        Classes="GreenButton" ToolTip.Tip="Launch"
-                                        Margin="{ext:Space 0, 0, 1, 0}"/>
-                                
-                                <Button Content="{avalonia:MaterialIconExt Delete}" 
-                                        Command="{Binding $parent[views1:ProfilesView].((viewModels1:ProfilesViewModel)DataContext).Delete}"
-                                        CommandParameter="{Binding $self.DataContext}" ToolTip.Tip="Delete"
-                                        Classes="RedButton" Margin="{ext:Space 0, 0, 1, 0}"/>
-                                
-                                <Button Content="{avalonia:MaterialIconExt Rename}" 
-                                        Command="{Binding Rename}"
-                                        ToolTip.Tip="Rename" Margin="{ext:Space 0, 0, 1, 0}"/>
-                                
-                                <Button Content="{avalonia:MaterialIconExt Folder}" 
-                                        Command="{Binding OpenFolder}"
-                                        ToolTip.Tip="Open Folder"/>
-                                
-                                <Button Content="{avalonia:MaterialIconExt Update}" Command="{Binding ChangeVersionPrompt}" 
-                                        ToolTip.Tip="Change Version"
-                                        Margin="{ext:Space 1, 0, 0, 0}" IsVisible="{Binding ProfileType, 
-                                            Converter={StaticResource EnumEquals},
-                                            ConverterParameter={x:Static installation1:EProfileType.Custom}}"/>
-                                
-                                <Button Content="{avalonia:MaterialIconExt Download}" Command="{Binding Update}" 
-                                        ToolTip.Tip="Update"
-                                        Margin="{ext:Space 1, 0, 0, 0}" IsVisible="{Binding ProfileType, 
-                                            Converter={StaticResource EnumEquals},
-                                            ConverterParameter={x:Static installation1:EProfileType.Repository}}"/>
-                            </StackPanel>
-                        </ui:SettingsExpander.Footer>
-                    </ui:SettingsExpander>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <controls:DynamicFadeScrollViewer Grid.Row="2" >
+            <ItemsControl ItemsSource="{Binding Profiles}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <settings:SettingsItem Title="{Binding Name}" Description="{Binding DescriptionString}">
+                            <settings:SettingsItem.Header>
+                                <Image Width="32" Height="32" asyncImageLoader:ImageLoader.Source="{Binding IconUrl}"/>
+                            </settings:SettingsItem.Header>
+                            <settings:SettingsItem.Footer>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="{avalonia:MaterialIconExt Launch}" Command="{Binding Launch}"
+                                            Classes="GreenButton" ToolTip.Tip="Launch"
+                                            Margin="{ext:Space 0, 0, 1, 0}"/>
+                                    
+                                    <Button Content="{avalonia:MaterialIconExt Delete}" 
+                                            Command="{Binding $parent[views1:ProfilesView].((viewModels1:ProfilesViewModel)DataContext).Delete}"
+                                            CommandParameter="{Binding $self.DataContext}" ToolTip.Tip="Delete"
+                                            Classes="RedButton" Margin="{ext:Space 0, 0, 1, 0}"/>
+                                    
+                                    <Button Content="{avalonia:MaterialIconExt Rename}" 
+                                            Command="{Binding Rename}"
+                                            ToolTip.Tip="Rename" Margin="{ext:Space 0, 0, 1, 0}"/>
+                                    
+                                    <Button Content="{avalonia:MaterialIconExt Folder}" 
+                                            Command="{Binding OpenFolder}"
+                                            ToolTip.Tip="Open Folder"/>
+                                    
+                                    <Button Content="{avalonia:MaterialIconExt Update}" Command="{Binding ChangeVersionPrompt}" 
+                                            ToolTip.Tip="Change Version"
+                                            Margin="{ext:Space 1, 0, 0, 0}" IsVisible="{Binding ProfileType, 
+                                                Converter={StaticResource EnumEquals},
+                                                ConverterParameter={x:Static installation1:EProfileType.Custom}}"/>
+                                    
+                                    <Button Content="{avalonia:MaterialIconExt Download}" Command="{Binding Update}" 
+                                            ToolTip.Tip="Update"
+                                            Margin="{ext:Space 1, 0, 0, 0}" IsVisible="{Binding ProfileType, 
+                                                Converter={StaticResource EnumEquals},
+                                                ConverterParameter={x:Static installation1:EProfileType.Repository}}"/>
+                                </StackPanel>
+                            </settings:SettingsItem.Footer>
+                        </settings:SettingsItem>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="{ext:Space 1}"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </controls:DynamicFadeScrollViewer>
         
         <TextBlock Grid.Row="2" Text="No Installation Profiles Found" IsVisible="{Binding !Profiles.Count}"
                    HorizontalAlignment="Center" VerticalAlignment="Center" 
                    Classes="BodyTextBlockStyle TextFillColorTertiaryBrush"/>
-        
-        <ui:FABorder Grid.Row="4" CornerRadius="0" Padding="{ext:Space 1}" Background="#22000000" 
-                     IsEnabled="{Binding CanCreateProfile}">
-            <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Orientation="Horizontal">
-                <Button Command="{Binding ImportInstallation}" Margin="{ext:Space 0, 0, 1, 0}">
-                    <controls:IconText Icon="Import" Text="Import Installation"/>
-                </Button>
-                <Button Command="{Binding CreateProfile}">
-                    <controls:IconText Icon="Add" Text="Create Profile"/>
-                </Button>
-            </StackPanel>
-        </ui:FABorder>
         
     </Grid>
 </UserControl>

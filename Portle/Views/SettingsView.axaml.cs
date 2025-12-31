@@ -6,7 +6,7 @@ namespace Portle.Views;
 
 public partial class SettingsView : ViewBase<SettingsViewModel>
 {
-    public SettingsView() : base(AppSettings.Current, initializeViewModel: false)
+    public SettingsView() : base(AppSettings.Application, initializeViewModel: false)
     {
         InitializeComponent();
     }

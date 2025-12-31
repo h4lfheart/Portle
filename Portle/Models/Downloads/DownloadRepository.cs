@@ -21,9 +21,6 @@ public partial class DownloadRepository : ObservableObject
     
     [ObservableProperty] private bool _isFilterEnabled = true;
     
-    [JsonIgnore] public Task<Bitmap?> IconImage => ImageLoader.AsyncImageLoader.ProvideImageAsync(IconUrl);
-
-
     public DownloadRepository(RepositoryResponse response, string repositoryUrl)
     {
         RepositoryUrl = repositoryUrl;
@@ -47,7 +44,7 @@ public partial class DownloadRepository : ObservableObject
 
     public async Task Refresh()
     {
-        if (await ApiVM.Misc.GetRepositoryAsync(RepositoryUrl) is not { } response) return;
+        if (await Api.General.Repository(RepositoryUrl) is not { } response) return;
 
         SetPropertiesFrom(response);
     }

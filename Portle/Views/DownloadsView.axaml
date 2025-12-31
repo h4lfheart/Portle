@@ -14,18 +14,18 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="Portle.Views.DownloadsView"
              x:DataType="viewModels1:DownloadsViewModel">
-    <Grid>
+    <Grid Margin="{ext:Space 1}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="{ext:Space 0}"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="{ext:Space 1}"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <Grid Grid.Row="0" Margin="{ext:Space 1, 1, 1, 0}">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="{ext:Space 1}"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="{ext:Space 1}"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
@@ -35,11 +35,16 @@
             <DropDownButton Grid.Column="2" HorizontalAlignment="Stretch">
                 <DropDownButton.Flyout>
                     <Flyout>
-                        <ItemsControl ItemsSource="{Binding VisibleRepositories}">
+                        <ItemsControl ItemsSource="{Binding RepositoryFilters}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <CheckBox Content="{Binding Title}"
-                                              IsChecked="{Binding IsFilterEnabled, Mode=TwoWay}" IsCheckedChanged="OnRepositoryFilterChecked"/>
+                                <DataTemplate DataType="viewModels1:RepositoryFilter">
+                                    <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="{ext:Space 1}">
+                                            <Image Width="16" Height="16" asyncImageLoader:ImageLoader.Source="{Binding Repository.IconUrl}"
+                                                   RenderOptions.BitmapInterpolationMode="MediumQuality" RenderOptions.EdgeMode="Antialias"/>
+                                            <TextBlock Text="{Binding Repository.Title}"/>
+                                        </StackPanel>
+                                    </CheckBox>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemsPanel>
@@ -53,13 +58,18 @@
                 
                 <controls:IconText Icon="Filter" Text="Repositories"/>
             </DropDownButton>
+            
+            <Button Grid.Column="4" Command="{Binding RefreshCommand}"
+                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Content="{avalonia:MaterialIconExt Refresh, Size=20}"/>
+            
         </Grid>
         
-        <ScrollViewer Grid.Row="2" Margin="{ext:Space 1}">
-            <ItemsControl ItemsSource="{Binding Versions}" Margin="{Binding $parent[ScrollViewer], Converter={StaticResource ScrollViewerMargin}}">
+        <controls:DynamicFadeScrollViewer Grid.Row="2">
+            <ItemsControl ItemsSource="{Binding Versions}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <ui:FABorder Margin="{ext:Space 0, 0, 0, 0.5}">
+                        <controls:ContentCard>
                             <Grid Margin="{ext:Space 1}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -73,7 +83,7 @@
                                 </Grid.ColumnDefinitions>
                                 
                                 <asyncImageLoader:AdvancedImage Grid.Column="0" Margin="{ext:Space 0, 0, 1, 0}"
-                                                                RenderOptions.BitmapInterpolationMode="MediumQuality"
+                                                                RenderOptions.BitmapInterpolationMode="MediumQuality" RenderOptions.EdgeMode="Antialias"
                                                                 Source="{Binding ParentRepository.IconUrl}" 
                                                                 Width="24" Height="24" 
                                                                 IsVisible="{Binding ParentRepository.IconUrl, Converter={x:Static ObjectConverters.IsNotNull}}"/>
@@ -88,7 +98,8 @@
                                 
                                 <ProgressBar Grid.Column="5" Value="{Binding DownloadProgressFraction}" 
                                              Minimum="0" Maximum="1" MinWidth="0" Background="Transparent"
-                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                             IsVisible="{Binding IsCurrentlyDownloading}"/>
                                 
                                 <Button Grid.Column="7" HorizontalAlignment="Right" IsVisible="{Binding !IsDownloaded}"
                                         Command="{Binding DownloadCommand}" Classes="GreenButton">
@@ -102,21 +113,19 @@
                                     <controls:IconText Icon="Trash" Text="Delete"/>
                                 </Button>
                             </Grid>
-                        </ui:FABorder>
+                        </controls:ContentCard>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="{ext:Space 1}"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
             </ItemsControl>
-        </ScrollViewer>
+        </controls:DynamicFadeScrollViewer>
         
         <TextBlock Grid.Row="2" Text="No Versions Found" IsVisible="{Binding !Versions.Count}"
                    HorizontalAlignment="Center" VerticalAlignment="Center" 
                    Classes="BodyTextBlockStyle TextFillColorTertiaryBrush"/>
-        
-        <ui:FABorder Grid.Row="4" CornerRadius="0" Padding="{ext:Space 1}" Background="#22000000">
-            <Button Command="{Binding RefreshCommand}" 
-                    HorizontalAlignment="Right" VerticalAlignment="Center">
-                <controls:IconText Icon="Refresh" Text="Refresh Installations"/>
-            </Button>
-        </ui:FABorder>
     </Grid>
 </UserControl>

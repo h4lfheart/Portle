@@ -1,4 +1,4 @@
-global using static Portle.Services.ApplicationService;
+global using static Portle.Application.AppServices;
 using Avalonia.Platform.Storage;
 using Portle.Models;
 
@@ -8,9 +8,9 @@ public static class Globals
 {
     
     public static string VersionString => Version.GetDisplayString(EVersionStringType.IdentifierPrefix);
-    public static readonly FPVersion Version = new(1, 0, 0);
+    public static readonly FPVersion Version = new(2, 0, 0);
     
-    public const string DEFAULT_REPOSITORY = "https://fortniteporting.halfheart.dev/api/v3/repository";
+    public const string DEFAULT_REPOSITORY = "https://api.fortniteporting.app/v1/static/repository";
     
     public static readonly FilePickerFileType ExecutableFileType = new("Executable") { Patterns = ["*.exe"] };
 }

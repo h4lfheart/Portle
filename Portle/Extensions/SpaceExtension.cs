@@ -26,16 +26,34 @@ public class SpaceExtension : MarkupExtension
         Margin = new Thickness(left, top, right, bottom);
     }
 
-    public override object ProvideValue(IServiceProvider serviceProvider)
+    public override object ProvideValue(IServiceProvider? serviceProvider)
     {
-        if (serviceProvider.GetService(typeof(IProvideValueTarget)) is not IProvideValueTarget service)
-            throw new InvalidOperationException();
+        if (serviceProvider?.GetService(typeof(IProvideValueTarget)) is not IProvideValueTarget service)
+        {
+            return Margin * Factor * Default;
+        }
 
         return service.TargetProperty switch
         {
             StyledProperty<Thickness> => Margin * Factor * Default,
             StyledProperty<GridLength> => new GridLength(Factor * Default),
+            StyledProperty<double> => Factor * Default,
             _ => Margin * Factor * Default
         };
+    }
+    
+    public static Thickness Space(double factor)
+    {
+        return (Thickness) new SpaceExtension(factor).ProvideValue(null);
+    }
+    
+    public static Thickness Space(double horizontal, double vertical)
+    {
+        return (Thickness) new SpaceExtension(horizontal, vertical).ProvideValue(null);
+    }
+    
+    public static Thickness Space(double left, double top, double right, double bottom)
+    {
+        return (Thickness) new SpaceExtension(left, top, right, bottom).ProvideValue(null);
     }
 }

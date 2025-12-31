@@ -6,7 +6,9 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Portle.Application;
 using Portle.Framework;
+using Portle.Models.Information;
 using Portle.Models.Repository;
+using Portle.Services;
 using Portle.Validators;
 using Portle.Views;
 
@@ -29,37 +31,28 @@ public partial class SetupViewModel : ViewModelBase
     [RelayCommand]
     public async Task Continue()
     {
-        AppSettings.Current.InstallationPath = InstallationPath;
-        AppSettings.Current.DownloadsPath = DownloadsPath;
-        AppSettings.Current.Repositories = [new RepositoryUrlContainer(Globals.DEFAULT_REPOSITORY)];
-        AppSettings.Current.LaunchOnStartup = LaunchOnStartup;
-        AppSettings.Current.MinimizeToTray = MinimizeToTray;
-        AppSettings.Current.CloseOnLaunch = CloseOnLaunch;
-        AppSettings.Current.FinishedSetup = true;
+        AppSettings.Application.InstallationPath = InstallationPath;
+        AppSettings.Application.DownloadsPath = DownloadsPath;
+        AppSettings.Application.Repositories = [Globals.DEFAULT_REPOSITORY];
+        AppSettings.Application.LaunchOnStartup = LaunchOnStartup;
+        AppSettings.Application.MinimizeToTray = MinimizeToTray;
+        AppSettings.Application.CloseOnLaunch = CloseOnLaunch;
+        AppSettings.Application.FinishedSetup = true;
         
-        ViewModelRegistry.New<RepositoriesViewModel>(initialize: true);
-        ViewModelRegistry.New<DownloadsViewModel>(initialize: true);
-        
-        AppWM.Navigate<ProfilesView>();
+        Navigation.App.Open<ProfilesView>();
 
-        var importDialog = new ContentDialog
-        {
-            Title = "Import Existing Installation",
-            Content = "Would you like to import any existing installations?",
-            PrimaryButtonText = "Yes",
-            CloseButtonText = "No",
-            PrimaryButtonCommand = new RelayCommand(async () =>
+        Info.Dialog("Import Installation", "Would you like to import any existing installations?", buttons:[ 
+            new DialogButton
             {
-                await ProfilesVM.ImportInstallation();
-            })
-        };
-
-        await importDialog.ShowAsync();
+                Text = "Import",
+                Action = () => TaskService.Run(async () => await ProfilesVM.ImportInstallation())
+            }
+        ]);
     }
     
     public async Task BrowseInstallationPath()
     {
-        if (await BrowseFolderDialog() is { } path)
+        if (await App.BrowseFolderDialog() is { } path)
         {
             InstallationPath = path;
         }
@@ -67,7 +60,7 @@ public partial class SetupViewModel : ViewModelBase
     
     public async Task BrowseDownloadsPath()
     {
-        if (await BrowseFolderDialog() is { } path)
+        if (await App.BrowseFolderDialog() is { } path)
         {
             DownloadsPath = path;
         }

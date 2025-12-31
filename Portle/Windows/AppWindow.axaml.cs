@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using FluentAvalonia.UI.Controls;
 using Portle.Application;
+using Portle.Controls.Navigation.Sidebar;
 using Portle.Framework;
 using Portle.WindowModels;
 
@@ -10,39 +11,31 @@ namespace Portle.Windows;
 
 public partial class AppWindow : WindowBase<AppWindowModel>
 {
-    public AppWindow() : base(AppWM, initializeWindowModel: false)
+    public AppWindow() : base(initializeWindowModel: false)
     {
         InitializeComponent();
         DataContext = WindowModel;
-        WindowModel.ContentFrame = ContentFrame;
-        WindowModel.NavigationView = NavigationView;
+
         WindowModel.HideCommand = Hide;
+        
+        Navigation.App.Initialize(Sidebar, ContentFrame);
     }
 
-    private void OnItemInvoked(object? sender, NavigationViewItemInvokedEventArgs e)
+    protected override void OnClosing(WindowClosingEventArgs e)
     {
-        var viewName = $"Portle.Views.{e.InvokedItemContainer.Tag}View";
+        base.OnClosing(e);
         
-        var type = Type.GetType(viewName);
-        if (type is null) return;
-        
-        WindowModel.Navigate(type);
-    }
-
-    private void OnPointerPressedUpperBar(object? sender, PointerPressedEventArgs e)
-    {
-        BeginMoveDrag(e);
-    }
-    
-    private void OnClosing(object? sender, WindowClosingEventArgs e)
-    {
-        if (AppSettings.Current.MinimizeToTray)
+        if (AppSettings.Application.MinimizeToTray)
         {
             e.Cancel = true;
             
             AppSettings.Save();
             Hide();
         }
+    }
 
+    private void OnSidebarItemSelected(object? sender, SidebarItemSelectedArgs args)
+    {
+        Navigation.App.Open(args.Tag);
     }
 }

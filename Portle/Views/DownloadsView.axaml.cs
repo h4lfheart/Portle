@@ -8,7 +8,7 @@ namespace Portle.Views;
 
 public partial class DownloadsView : ViewBase<DownloadsViewModel>
 {
-    public DownloadsView() : base(DownloadsVM, initializeViewModel: false)
+    public DownloadsView()
     {
         InitializeComponent();
     }
@@ -21,7 +21,5 @@ public partial class DownloadsView : ViewBase<DownloadsViewModel>
         if (isChecked == downloadRepository.IsFilterEnabled) return;
         
         downloadRepository.IsFilterEnabled = isChecked;
-        
-        ViewModel.FakeRefreshFilters();
     }
 }

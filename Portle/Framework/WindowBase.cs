@@ -1,36 +1,64 @@
 using System;
 using Avalonia.Controls;
+using Avalonia.Input;
+using Microsoft.Extensions.DependencyInjection;
+using Portle.Application;
 using Portle.Services;
 
 namespace Portle.Framework;
 
-public abstract class WindowBase<T> : Window where T : ViewModelBase, new()
+public abstract class WindowBase<T> : Window where T : WindowModelBase
 {
-    protected readonly T WindowModel;
+    public T WindowModel { get; set; }
 
-    public WindowBase(ViewModelBase? templateWindowModel = null, bool initializeWindowModel = true)
+    public WindowBase(T? templateWindowModel = null, bool initializeWindowModel = true)
     {
-        WindowModel = templateWindowModel is not null ? ViewModelRegistry.Register<T>(templateWindowModel) : ViewModelRegistry.New<T>();
-
+        WindowModel = templateWindowModel ?? AppServices.Services.GetService<T>();
+        WindowModel.Window = this;
+        
         if (initializeWindowModel)
         {
             TaskService.Run(WindowModel.Initialize);
         }
     }
 
-    protected override void OnClosed(EventArgs e)
+    protected override async void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
+        
+        await WindowModel.OnViewExited();
+    }
+    
+    protected void OnPointerPressedUpperBar(object? sender, PointerPressedEventArgs e)
+    {
+        BeginMoveDrag(e);
+    }
 
-        ViewModelRegistry.Unregister<T>();
+    protected void OnMinimizePressed(object? sender, PointerPressedEventArgs e)
+    {
+        WindowState = WindowState.Minimized;
+    }
+    
+    protected void OnMaximizePressed(object? sender, PointerPressedEventArgs e)
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
+    
+    protected void OnClosePressed(object? sender, PointerPressedEventArgs e)
+    {
+        Close();
     }
 }
 
+
 public static class WindowExtensions 
 {
-    public static void BringToTop(this Window window)
+    extension(Window window)
     {
-        window.Topmost = true;
-        window.Topmost = false;
+        public void BringToTop()
+        {
+            window.Topmost = true;
+            window.Topmost = false;
+        }
     }
 }
