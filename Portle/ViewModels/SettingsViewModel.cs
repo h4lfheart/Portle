@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -19,7 +20,7 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private bool _minimizeToTray = false;
     [ObservableProperty] private bool _closeOnLaunch = false;
     
-    [ObservableProperty] private ObservableCollection<string> _repositories = [];
+    [ObservableProperty] private HashSet<string> _repositories = [];
     [ObservableProperty] private ObservableCollection<InstallationVersion> _downloadedVersions = [];
     [ObservableProperty] private ObservableCollection<InstallationProfile> _profiles = [];
     

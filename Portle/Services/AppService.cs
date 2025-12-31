@@ -138,6 +138,25 @@ public class AppService : IService
                 };
 
                 Directory.CreateDirectory(Path.GetDirectoryName(profile.ExecutablePath)!);
+                
+                if (MiscExtensions.GetRunningProcess(profile.ExecutablePath) is { } runningProcess)
+                {
+                    runningProcess.Kill(entireProcessTree: true);
+                    Log.Information($"Killed {profile.ExecutablePath}");
+
+                    var tries = 0;
+                    while (MiscExtensions.IsProcessRunning(profile.ExecutablePath) && tries < 20)
+                    {
+                        await Task.Delay(100);
+                        tries++;
+                    }
+
+                    if (tries >= 20)
+                    {
+                        return;
+                    }
+                }
+                
                 File.Copy(targetVersion.ExecutablePath, profile.ExecutablePath, true);
 
                 ProfilesVM.ProfilesSource.Add(profile);
@@ -167,7 +186,6 @@ public class AppService : IService
             if (ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName)) is
                 { } existingProfile)
             {
-                Log.Information($"FILE EXISTS MAYBE??? {File.Exists(existingProfile.ExecutablePath)}");
                 await existingProfile.Launch();
             }
         }

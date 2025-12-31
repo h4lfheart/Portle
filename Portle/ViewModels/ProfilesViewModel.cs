@@ -196,7 +196,7 @@ public partial class ProfilesViewModel : ViewModelBase
 
     public async Task Delete(InstallationProfile profile)
     {
-        Info.Dialog($"Delete \"{profile.Name}\"", "Are you sure you want to delete this profile?", buttons: [
+        Info.Dialog($"Delete \"{profile.Name}\"", "Are you sure you want to delete this profile? " + (profile.IsImported ? "No files will be deleted." : "The installation will be fully deleted."), buttons: [
             new DialogButton
             {
                 Text = "Delete",

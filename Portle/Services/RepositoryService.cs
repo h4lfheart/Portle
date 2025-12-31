@@ -33,7 +33,7 @@ public partial class RepositoryService : ObservableObject, IService
     
     public async Task AddRepository(string url, bool verbose = true)
     {
-        if (Repositories.Items.Any(repo => repo.RepositoryUrl.Equals(url, StringComparison.OrdinalIgnoreCase)))
+        if (AppSettings.Application.Repositories.Any(repoUrl => repoUrl.Equals(url, StringComparison.OrdinalIgnoreCase)))
         {
             if (verbose)
                 Info.Message("Repository", $"A repository already exists with the url \"{url}\"");

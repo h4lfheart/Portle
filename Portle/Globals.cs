@@ -8,7 +8,7 @@ public static class Globals
 {
     
     public static string VersionString => Version.GetDisplayString(EVersionStringType.IdentifierPrefix);
-    public static readonly FPVersion Version = new(2, 0, 0);
+    public static readonly FPVersion Version = new(2, 0, 0, 0, "beta");
     
     public const string DEFAULT_REPOSITORY = "https://api.fortniteporting.app/v1/static/repository";
     
