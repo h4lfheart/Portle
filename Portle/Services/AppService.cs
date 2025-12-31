@@ -48,7 +48,6 @@ public class AppService : IService
 
         Lifetime.Startup += OnAppStart;
         Lifetime.Exit += OnAppExit;
-        OpenWindow();
     }
     
     public void OpenWindow()
@@ -103,7 +102,7 @@ public class AppService : IService
         if (args.IndexOf("--add-repository") is var addRepoIndex and not -1)
         {
             var repositoryUrl = args[addRepoIndex + 1].Trim('"');
-            await Repositories.AddRepository(repositoryUrl);
+            await Repositories.AddRepository(repositoryUrl, verbose: false);
         }
 
         if (args.IndexOf("--import-profile") is var importProfileCommandIndex and not -1)

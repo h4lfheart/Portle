@@ -25,17 +25,18 @@ public partial class RepositoryService : ObservableObject, IService
         Repositories.Clear();
         Versions.Clear();
         
-        foreach (var repositoryUrl in AppSettings.Application.Repositories)
+        foreach (var repositoryUrl in AppSettings.Application.Repositories.ToArray())
         {
             await LoadRepository(repositoryUrl);
         }
     }
     
-    public async Task AddRepository(string url)
+    public async Task AddRepository(string url, bool verbose = true)
     {
         if (Repositories.Items.Any(repo => repo.RepositoryUrl.Equals(url, StringComparison.OrdinalIgnoreCase)))
         {
-            Info.Message("Repository", $"A repository already exists with the url \"{url}\"");
+            if (verbose)
+                Info.Message("Repository", $"A repository already exists with the url \"{url}\"");
             return;
         }
         
@@ -46,7 +47,6 @@ public partial class RepositoryService : ObservableObject, IService
         }
         else
         {
-            
             Info.Message("Repository", $"Failed to load a repository from the url \"{url}\"");
         }
     }

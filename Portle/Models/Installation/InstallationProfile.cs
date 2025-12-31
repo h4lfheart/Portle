@@ -36,7 +36,7 @@ public partial class InstallationProfile : ObservableObject
     public bool IsImported => !Directory.Contains(AppSettings.Application.InstallationPath);
 
     [JsonIgnore] public string ExecutablePath => Path.Combine(Directory, ExecutableName);
-    [JsonIgnore] public string DescriptionString => $"{Version} - {(IsImported ? "External" : "Portle")} - {Id}}}";
+    [JsonIgnore] public string DescriptionString => $"{Version} - {(IsImported ? "External" : "Portle")} - {Id}";
 
     public async Task Launch()
     {
@@ -67,7 +67,7 @@ public partial class InstallationProfile : ObservableObject
             return;
         }
         
-        Info.Message(Name, $"Launching Profile");
+        Info.Message(Name, $"Launching Profile for {Version}");
         Log.Information($"Launched profile \"{Name}\" at {ExecutablePath}");
         
         Process.Start(new ProcessStartInfo
