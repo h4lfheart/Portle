@@ -14,6 +14,8 @@ public partial class RepositoryService : ObservableObject, IService
 {
     public readonly SourceList<DownloadRepository> Repositories = new();
     public readonly SourceList<DownloadVersion> Versions = new();
+    
+    private readonly SemaphoreSlim _loadLock = new(1, 1);
 
     public RepositoryService()
     {
@@ -33,8 +35,17 @@ public partial class RepositoryService : ObservableObject, IService
     
     public async Task AddRepository(string url, bool verbose = true)
     {
+        if (Repositories.Items.Any(repo => repo.RepositoryUrl.Equals(url, StringComparison.OrdinalIgnoreCase)))
+        {
+            if (verbose)
+                Info.Message("Repository", $"A repository already exists with the url \"{url}\"");
+            return;
+        }
+    
         if (AppSettings.Application.Repositories.Any(repoUrl => repoUrl.Equals(url, StringComparison.OrdinalIgnoreCase)))
         {
+            await LoadRepository(url);
+        
             if (verbose)
                 Info.Message("Repository", $"A repository already exists with the url \"{url}\"");
             return;
@@ -61,18 +72,29 @@ public partial class RepositoryService : ObservableObject, IService
     
     private async Task<bool> LoadRepository(string repoUrl)
     {
-        if (await Api.General.Repository(repoUrl) is not { } repositoryResponse) 
-            return false;
-
-        var repo = new DownloadRepository(repositoryResponse, repoUrl);
-        Repositories.Add(repo);
-
-        foreach (var version in repo.Versions)
+        await _loadLock.WaitAsync();
+        try
         {
-            Versions.Add(version);
-        }
+            if (Repositories.Items.Any(repo => repo.RepositoryUrl.Equals(repoUrl)))
+                return true; // already loaded
+        
+            if (await Api.General.Repository(repoUrl) is not { } repositoryResponse) 
+                return false;
 
-        return true;
+            var repo = new DownloadRepository(repositoryResponse, repoUrl);
+            Repositories.Add(repo);
+
+            foreach (var version in repo.Versions)
+            {
+                Versions.Add(version);
+            }
+
+            return true;
+        }
+        finally
+        {
+            _loadLock.Release();
+        }
     }
 
 }

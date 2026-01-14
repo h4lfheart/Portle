@@ -89,19 +89,24 @@ public class AppService : IService
     
     public async void ExecuteArguments(string[] args)
     {
+        Log.Information($"Receive Execute Arguments: {string.Join(' ', args)}");
+        
         if (args.IndexOf("--skip-setup") is not -1 && !AppSettings.Application.FinishedSetup)
         {
+            Log.Information("Skipping setup due to flag");
             AppSettings.Application.FinishedSetup = true;
         }
         
         if (args.IndexOf("--startup") is -1 && args.IndexOf("--silent") is -1)
         {
+            Log.Information("Opening main window due to non-silent / startup flag");
             OpenWindow();
         }
 
         if (args.IndexOf("--add-repository") is var addRepoIndex and not -1)
         {
             var repositoryUrl = args[addRepoIndex + 1].Trim('"');
+            Log.Information($"Adding repository {repositoryUrl}");
             await Repositories.AddRepository(repositoryUrl, verbose: false);
         }
 
@@ -110,11 +115,14 @@ public class AppService : IService
             var profileName = args[importProfileCommandIndex + 1].Trim('"');
             var executablePath = args[importProfileCommandIndex + 2].Trim('"');
             var repositoryId = args[importProfileCommandIndex + 3].Trim('"');
+            
+            Log.Information($"Adding profile \"{profileName}\" with path {executablePath} and repository id {repositoryId}");
 
             var existingProfile = ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName));
             var targetRepository = Repositories.Repositories.Items.FirstOrDefault(repo => repo.Id.Equals(repositoryId));
             if (existingProfile is not null)
             {
+                Log.Information("Profile already exists, updating info");
                 existingProfile.Directory = Path.GetDirectoryName(executablePath)!;
                 existingProfile.ExecutableName = Path.GetFileName(executablePath);
             }
@@ -123,6 +131,8 @@ public class AppService : IService
                 var targetDownloadVersion = targetRepository.Versions.MaxBy(version => version.UploadTime)!;
                 var targetVersion = await targetDownloadVersion.DownloadInstallationVersion();
 
+                Log.Information($"Creating new profile with latest version {targetVersion}");
+                
                 var id = Guid.NewGuid();
 
                 var profile = new InstallationProfile
@@ -170,6 +180,9 @@ public class AppService : IService
             var profileName = args[updateProfileIndex + 1].Trim('"');
             var isForcedIndex = updateProfileIndex + 2;
             var isForced = isForcedIndex < args.Length && args[isForcedIndex].Trim('"').Equals("-force");
+            
+            Log.Information($"Updating profile \"{profileName}\" with {(isForced ? "non-force" : "force")}");
+            
             if (ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName)) is
                 { } existingProfile)
             {
@@ -178,15 +191,25 @@ public class AppService : IService
                 else
                     await existingProfile.Update(verbose: false);
             }
+            else
+            {
+                Log.Information($"Failed to find existing profile with the name \"{profileName}\"");
+            }
         }
         
         if (args.IndexOf("--launch-profile") is var launchProfileIndex and not -1)
         {
             var profileName = args[launchProfileIndex + 1].Trim('"');
+            Log.Information($"Launching profile \"{profileName}\"");
+            
             if (ProfilesVM.ProfilesSource.Items.FirstOrDefault(profile => profile.Name.Equals(profileName)) is
                 { } existingProfile)
             {
                 await existingProfile.Launch();
+            }
+            else
+            {
+                Log.Information($"Failed to find existing profile with the name \"{profileName}\"");
             }
         }
     }

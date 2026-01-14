@@ -14,7 +14,7 @@ public partial class SettingsService : ObservableObject, IService
     public bool ShouldSaveOnExit = true;
     
     public static readonly DirectoryInfo DirectoryPath = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Portle"));
-    public static readonly FileInfo FilePath = new(Path.Combine(DirectoryPath.FullName, "AppSettings.json"));
+    public static readonly FileInfo FilePath = new(Path.Combine(DirectoryPath.FullName, "AppSettingsV2.json"));
 
     public SettingsService()
     {

@@ -53,6 +53,8 @@ public partial class InfoService : ObservableObject, IService
 
     public void Message(MessageData data)
     {
+        Log.Information("{Title}: {Message}", data.Title, data.Message);
+        
         Messages.Add(data);
         if (!data.AutoClose) return;
         
