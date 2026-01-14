@@ -26,8 +26,14 @@
             ConverterParameter={x:Static installation1:EProfileType.Repository}}">
             
             <TextBlock Text="Repository" Classes="BodyStrongTextBlockStyle" Margin="{ext:Space 0, 0, 0, 1}"/>
+            
+            <TextBlock Text="No Repositories Added" HorizontalAlignment="Left"
+                       IsVisible="{Binding !Repositories.Count}"
+                       Classes="CaptionTextBlockStyle TextFillColorSecondaryBrush"/>
+            
             <ComboBox ItemsSource="{Binding Repositories}" 
                       SelectedItem="{Binding SelectedRepository, Mode=TwoWay}"
+                      IsVisible="{Binding !!Repositories.Count}"
                       HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
@@ -52,8 +58,13 @@
             
             <TextBlock Text="Version" Classes="BodyStrongTextBlockStyle"/>
             
+            <TextBlock Text="No Versions Downloaded" HorizontalAlignment="Left"
+                       IsVisible="{Binding !Versions.Count}"
+                       Classes="CaptionTextBlockStyle TextFillColorSecondaryBrush"/>
+            
             <ComboBox ItemsSource="{Binding Versions}" 
                       SelectedItem="{Binding SelectedVersion, Mode=TwoWay, TargetNullValue='No Versions Downloaded'}"
+                      IsVisible="{Binding !!Versions.Count}"
                       HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>

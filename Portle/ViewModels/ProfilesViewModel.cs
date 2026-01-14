@@ -106,6 +106,9 @@ public partial class ProfilesViewModel : ViewModelBase
                     InstallationVersion targetVersion;
                     if (dialogContext.ProfileType == EProfileType.Repository)
                     {
+                        if (dialogContext.SelectedRepository is null)
+                            return;
+                        
                         var targetDownloadVersion = dialogContext.SelectedRepository.Versions
                             .MaxBy(version => version.UploadTime);
                         if (targetDownloadVersion is null)
@@ -117,6 +120,9 @@ public partial class ProfilesViewModel : ViewModelBase
                     {
                         targetVersion = dialogContext.SelectedVersion;
                     }
+                    
+                    if (targetVersion is null) 
+                        return;
                 
                     var id = Guid.NewGuid();
                     var profilePath = Path.Combine(AppSettings.Application.InstallationPath, id.ToString());
@@ -145,8 +151,9 @@ public partial class ProfilesViewModel : ViewModelBase
     public async Task ImportInstallation()
     {
         if (await App.BrowseFileDialog(fileTypes: [Globals.ExecutableFileType]) is not { } executablePath) return;
-        
-        var content = new CreateProfileDialog();
+
+        CreateProfileDialog? content = null;
+        TaskService.RunDispatcher(() => content = new CreateProfileDialog());
         
         Info.Dialog("Import New Profile", content: content, buttons: [
             new DialogButton
