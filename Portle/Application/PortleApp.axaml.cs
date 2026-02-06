@@ -25,7 +25,7 @@ public partial class PortleApp : Avalonia.Application
 
         if (Styles.OfType<FluentAvaloniaTheme>().FirstOrDefault() is { } fluentTheme)
         {
-            fluentTheme.CustomAccentColor = Color.Parse("#303030");
+            fluentTheme.CustomAccentColor = Color.Parse("#13a5ff");
         }
         
         AppServices.Initialize();
