@@ -10,7 +10,7 @@ public static class Globals
     public static string VersionString => Version.GetDisplayString(EVersionStringType.IdentifierPrefix);
     public static readonly FPVersion Version = new(2, 0, 0, 0);
     
-    public const string DEFAULT_REPOSITORY = "https://api.fortniteporting.app/v1/static/repository";
+    public const string DEFAULT_REPOSITORY = "https://api.fortniteporting.app/v1/repository";
     
     public static readonly FilePickerFileType ExecutableFileType = new("Executable") { Patterns = ["*.exe"] };
 }
